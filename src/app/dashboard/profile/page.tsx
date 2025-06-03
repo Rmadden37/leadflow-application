@@ -124,11 +124,11 @@ export default function ProfilePage() {
     <div className="container mx-auto py-8 max-w-2xl space-y-6">
       <Card className="shadow-xl">
         <CardHeader>
-          <CardTitle className="text-2xl font-headline flex items-center">
+          <CardTitle className="text-2xl font-headline flex items-center justify-center">
             <User className="mr-3 h-7 w-7 text-primary" />
             User Profile
           </CardTitle>
-          <CardDescription>Manage your personal information and account settings.</CardDescription>
+          <CardDescription className="text-center">Manage your personal information and account settings.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
@@ -170,16 +170,16 @@ export default function ProfilePage() {
           </Form>
         </CardContent>
         <CardFooter className="flex-col items-start space-y-4 border-t pt-6 mt-6">
-            <div>
-                <h3 className="text-lg font-medium font-headline flex items-center">
+            <div className="w-full">
+                <h3 className="text-lg font-medium font-headline flex items-center justify-center">
                     <KeyRound className="mr-2 h-5 w-5 text-primary"/>
                     Password Reset
                 </h3>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-sm text-muted-foreground mt-1 text-center">
                     If you need to reset your password, click the button below. A reset link will be sent to your email address.
                 </p>
             </div>
-          <Button variant="outline" onClick={handlePasswordReset} disabled={isSendingResetEmail} className="w-full sm:w-auto">
+          <Button variant="outline" onClick={handlePasswordReset} disabled={isSendingResetEmail} className="w-full sm:w-auto self-center">
             {isSendingResetEmail ? (
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             ) : (
@@ -192,14 +192,14 @@ export default function ProfilePage() {
       {user.role === 'manager' && (
         <Card className="shadow-xl">
           <CardHeader>
-            <CardTitle className="text-xl font-headline flex items-center">
+            <CardTitle className="text-xl font-headline flex items-center justify-center">
                 <Briefcase className="mr-3 h-6 w-6 text-primary" />
                 Manager Tools
             </CardTitle>
-            <CardDescription>Access manager-specific functionalities.</CardDescription>
+            <CardDescription className="text-center">Access manager-specific functionalities.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-             <div>
+             <div className="text-center">
                 <Button asChild variant="outline" className="w-full sm:w-auto justify-start">
                   <Link href="/dashboard/all-leads">
                     <History className="mr-2 h-4 w-4"/>

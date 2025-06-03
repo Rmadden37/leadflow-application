@@ -80,7 +80,7 @@ export default function InProcessLeads() {
   return (
     <Card className="h-full flex flex-col shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-lg font-medium font-headline flex items-center">
+        <CardTitle className="text-lg font-medium font-headline flex items-center justify-center w-full">
           <Activity className="mr-2 h-6 w-6 text-primary" />
           In Process Leads
         </CardTitle>

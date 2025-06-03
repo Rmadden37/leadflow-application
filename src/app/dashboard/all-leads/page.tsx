@@ -76,7 +76,7 @@ export default function AllLeadsPage() {
     <div className="container mx-auto py-8">
       <Card className="shadow-xl">
         <CardHeader>
-          <CardTitle className="text-2xl font-headline flex items-center">
+          <CardTitle className="text-2xl font-headline flex items-center justify-center">
             <History className="mr-3 h-7 w-7 text-primary" />
             All Submitted Leads
           </CardTitle>
