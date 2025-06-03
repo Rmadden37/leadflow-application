@@ -292,7 +292,7 @@ export default function ProfilePage() {
                 </Button>
                 <input type="file" id="photoInput" accept="image/*" onChange={onSelectFile} className="hidden" />
             </div>
-             <p className="text-xs text-muted-foreground">For best results, upload a 1x1 (square) image. You&apos;ll be able to adjust the crop.</p>
+             <p className="text-xs text-muted-foreground">For best results, upload a 1x1 (square) image.</p>
           </div>
 
           <div className="space-y-2 pt-4 border-t">
@@ -443,3 +443,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+
