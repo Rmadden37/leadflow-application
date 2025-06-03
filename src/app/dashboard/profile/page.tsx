@@ -16,11 +16,13 @@ import { updateProfile, sendPasswordResetEmail } from "firebase/auth";
 import { doc, updateDoc, getDoc } from "firebase/firestore";
 import { ref as storageRef, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, User, Mail, ShieldCheck, Edit3, KeyRound, History, ExternalLink, Briefcase, Camera } from "lucide-react";
+import { Loader2, User, Mail, ShieldCheck, Edit3, KeyRound, History, ExternalLink, Briefcase, Camera, Users } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import ReactCrop, { type Crop, PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
+import TeamUserManagement from "@/components/dashboard/team-user-management";
+
 
 const profileFormSchema = z.object({
   displayName: z.string().min(2, { message: "Display name must be at least 2 characters." }).max(50, { message: "Display name cannot exceed 50 characters." }),
@@ -120,7 +122,6 @@ export default function ProfilePage() {
 
       if (user.role === "closer") {
         const closerDocRef = doc(db, "closers", user.uid);
-        // Check if closer doc exists before updating
         const closerDocSnap = await getDoc(closerDocRef);
         if (closerDocSnap.exists()) {
             await updateDoc(closerDocRef, { name: values.displayName });
@@ -173,11 +174,11 @@ export default function ProfilePage() {
 
   function onSelectFile(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.files && e.target.files.length > 0) {
-      setCrop(undefined); // Makes crop preview update between images.
+      setCrop(undefined); 
       const reader = new FileReader();
       reader.addEventListener('load', () => setUpImgSrc(reader.result?.toString() || ''));
       reader.readAsDataURL(e.target.files[0]);
-      setIsPhotoModalOpen(true); // Open modal when file is selected
+      setIsPhotoModalOpen(true); 
     }
   }
 
@@ -189,7 +190,7 @@ export default function ProfilePage() {
       height
     );
     setCrop(initialCrop);
-    setCompletedCrop(initialCrop); // Also set completedCrop initially
+    setCompletedCrop(initialCrop); 
   }
   
   useEffect(() => {
@@ -237,10 +238,19 @@ export default function ProfilePage() {
                     await updateDoc(closerDocRef, { avatarUrl: downloadURL });
                 }
             }
+            // Force re-fetch of user data to update avatar in UI
+            // This might need a more robust solution in useAuth or a global state update
+            const updatedUserSnap = await getDoc(userDocRef);
+            if (updatedUserSnap.exists()) {
+                 // This is a bit of a hack, ideally useAuth would re-fetch or have a refresh function
+                 // Forcing a state update that causes useAuth to re-evaluate might work
+                 // Or, update the local user object directly if useAuth provides a setter.
+            }
+
 
             toast({ title: "Profile Photo Updated", description: "Your new photo is now active." });
             setIsPhotoModalOpen(false);
-            setUpImgSrc(''); // Clear image src after upload
+            setUpImgSrc(''); 
         } catch (error: any) {
             console.error("Error uploading photo:", error);
             toast({ title: "Upload Failed", description: error.message || "Could not upload photo.", variant: "destructive" });
@@ -268,7 +278,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto py-8 max-w-2xl space-y-6">
+    <div className="container mx-auto py-8 max-w-3xl space-y-8"> {/* Increased max-w for new section */}
       <Card className="shadow-xl">
         <CardHeader>
           <CardTitle className="text-3xl font-bold font-headline flex items-center justify-center">
@@ -306,6 +316,13 @@ export default function ProfilePage() {
               <span className="font-medium">Role:</span>
               <span className="ml-2 text-muted-foreground capitalize">{user.role}</span>
             </div>
+             {user.teamId && (
+              <div className="flex items-center text-sm">
+                <Users className="mr-2 h-5 w-5 text-muted-foreground" />
+                <span className="font-medium">Team ID:</span>
+                <span className="ml-2 text-muted-foreground">{user.teamId}</span>
+              </div>
+            )}
           </div>
 
           <Form {...form}>
@@ -354,6 +371,7 @@ export default function ProfilePage() {
       </Card>
 
       {user.role === 'manager' && (
+        <>
         <Card className="shadow-xl">
           <CardHeader>
             <CardTitle className="text-2xl font-bold font-headline flex items-center justify-center">
@@ -377,13 +395,15 @@ export default function ProfilePage() {
               </div>
           </CardContent>
         </Card>
+        <TeamUserManagement />
+        </>
       )}
 
       {/* Photo Cropping Modal */}
       <Dialog open={isPhotoModalOpen} onOpenChange={(open) => {
           if (!open) {
               setIsPhotoModalOpen(false);
-              setUpImgSrc(''); // Clear image if modal is closed
+              setUpImgSrc(''); 
           } else {
               setIsPhotoModalOpen(true);
           }
@@ -421,7 +441,7 @@ export default function ProfilePage() {
                   style={{
                     border: '1px solid black',
                     objectFit: 'contain',
-                    width: completedCrop?.width ?? 0, // Ensure width/height are numbers
+                    width: completedCrop?.width ?? 0, 
                     height: completedCrop?.height ?? 0,
                     borderRadius: '50%',
                   }}
@@ -444,3 +464,5 @@ export default function ProfilePage() {
   );
 }
 
+
+    
