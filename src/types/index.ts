@@ -35,10 +35,9 @@ export interface Lead {
   updatedAt: Timestamp;
   dispositionNotes?: string;
   scheduledAppointmentTime?: Timestamp; // New field for rescheduled appointments
-  setterId?: string; // UID of the user (setter) who created the lead
+  setterId?: string; // UID of the user (setter or manager) who created the lead
   setterName?: string; // Display name of the setter
-  // Storing as a simple object in the type for ease of use, will be GeoPoint in Firestore
-  setterLocation?: { latitude: number; longitude: number; } | null; 
+  setterLocation?: GeoPoint | null; // GeoPoint from Firestore for setter's location
 }
 
 // Updated Closer type to reflect the fields in the 'closers' collection
