@@ -57,41 +57,48 @@
   }
 
   .dark {
-    --background: 220 10% 10%; /* Very Dark Grey/Almost Black */
-    --foreground: 220 10% 90%; /* Light Grey */
+    /* Minimalistic Dark Blue-Green Gradient Background */
+    /* Swatch 1: #011126 (hsla(213, 96%, 7%, 1)) */
+    /* Swatch 2: #0A5159 (hsla(185, 80%, 19%, 1)) */
+    /* Swatch 3: #197362 (hsla(168, 63%, 27%, 1)) */
+    /* Swatch 4: #268C6F (hsla(163, 57%, 34%, 1)) */
+    /* Swatch 5: #63BF8B (hsla(146, 41%, 57%, 1)) */
 
-    /* Solid very dark background for dark mode body */
-    --background-gradient-from: 220 10% 10%;
-    --background-gradient-to: 220 10% 10%;
+    --background: 213 96% 7%; /* Swatch 1 */
+    --foreground: 146 41% 57%; /* Swatch 5 */
 
-    --muted: 220 10% 20%; /* Darker Grey */
-    --muted-foreground: 220 10% 55%; /* Medium Grey */
+    /* Solid dark background for dark mode body */
+    --background-gradient-from: 213 96% 7%; /* Swatch 1 */
+    --background-gradient-to: 213 96% 7%; /* Swatch 1 */
 
-    --popover: 220 10% 12%; /* Slightly Lighter Dark Grey */
-    --popover-foreground: 220 10% 90%; /* Light Grey */
+    --muted: 213 96% 10%; /* Slightly lighter than background */
+    --muted-foreground: 146 41% 40%; /* Darker version of Swatch 5 */
 
-    --card: 220 10% 15%; /* Dark Grey for cards */
-    --card-foreground: 220 10% 90%; /* Light Grey */
+    --popover: 185 80% 19%; /* Swatch 2 */
+    --popover-foreground: 146 41% 57%; /* Swatch 5 */
 
-    --border: 220 10% 25%; /* Medium-Dark Grey for borders */
-    --input: 220 10% 25%; /* Same as border for input */
+    --card: 185 80% 19%; /* Swatch 2 */
+    --card-foreground: 146 41% 57%; /* Swatch 5 */
 
-    --primary: 210 40% 55%; /* Muted Cool Blue */
-    --primary-foreground: 0 0% 100%; /* White */
-    --primary-gradient-from: 210 40% 60%;
-    --primary-gradient-to: 210 40% 50%;
+    --border: 185 80% 25%; /* Slightly lighter than Swatch 2 */
+    --input: 185 80% 25%; /* Slightly lighter than Swatch 2 */
+
+    --primary: 163 57% 34%; /* Swatch 4 */
+    --primary-foreground: 0 0% 100%; /* White for contrast on Swatch 4 */
+    --primary-gradient-from: 163 57% 39%; /* Brighter version of Swatch 4 */
+    --primary-gradient-to: 163 57% 29%; /* Darker version of Swatch 4 */
 
 
-    --secondary: 220 10% 30%; /* Medium Grey for secondary */
-    --secondary-foreground: 220 10% 85%; /* Light-ish Grey */
+    --secondary: 168 63% 27%; /* Swatch 3 */
+    --secondary-foreground: 146 41% 57%; /* Swatch 5 for text on Swatch 3 */
 
-    --accent: 180 30% 50%; /* Desaturated Teal */
+    --accent: 163 57% 34%; /* Using Swatch 4 (Primary) as general accent */
     --accent-foreground: 0 0% 100%; /* White text on accent */
 
-    --destructive: 0 70% 50%; /* Slightly less saturated red */
-    --destructive-foreground: 0 0% 100%; /* White text on destructive */
+    --destructive: 0 70% 50%; 
+    --destructive-foreground: 0 0% 100%; 
 
-    --ring: 210 40% 55%; /* Muted Cool Blue for ring (same as new primary) */
+    --ring: 163 57% 34%; /* Swatch 4 for ring */
 
     /* Chart colors remain as previously defined for dark mode, can be adjusted if needed */
     --chart-1: 220 70% 50%;
