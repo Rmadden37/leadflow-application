@@ -17,16 +17,12 @@ export default function CloserLineup() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("[CloserLineup] useEffect triggered. User from useAuth:", user);
-
     if (!user || !user.teamId) {
-      console.log("[CloserLineup] No user or no user.teamId. teamId:", user?.teamId);
       setLoading(false);
       setClosers([]); 
       return;
     }
 
-    console.log(`[CloserLineup] User and teamId (${user.teamId}) found. Setting up Firestore query for 'closers' collection.`);
     setLoading(true);
     
     const q = query(
@@ -36,18 +32,9 @@ export default function CloserLineup() {
       orderBy("name", "asc") 
     );
 
-    console.log("[CloserLineup] Query details:", {
-      collection: "closers",
-      teamId: user.teamId,
-      status: "On Duty",
-      orderBy: "name asc"
-    });
-
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      console.log(`[CloserLineup] Firestore snapshot received. Number of documents: ${querySnapshot.docs.length}`);
       const closersData = querySnapshot.docs.map(doc => {
         const data = doc.data();
-        // console.log(`[CloserLineup] Mapping doc ${doc.id}:`, data); 
         return {
           uid: doc.id, 
           name: data.name,
@@ -58,7 +45,6 @@ export default function CloserLineup() {
           phone: data.phone,
         } as Closer;
       });
-      console.log("[CloserLineup] Mapped closersData:", closersData);
       setClosers(closersData);
       setLoading(false);
     }, (error) => {
@@ -67,7 +53,6 @@ export default function CloserLineup() {
     });
 
     return () => {
-      console.log("[CloserLineup] Cleaning up Firestore listener.");
       unsubscribe();
     }
   }, [user]);
@@ -100,3 +85,4 @@ export default function CloserLineup() {
     </Card>
   );
 }
+
