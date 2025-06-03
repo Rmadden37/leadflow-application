@@ -34,6 +34,7 @@ export interface Lead {
   createdAt: Timestamp;
   updatedAt: Timestamp;
   dispositionNotes?: string;
+  scheduledAppointmentTime?: Timestamp; // New field for rescheduled appointments
 }
 
 // Updated Closer type to reflect the fields in the 'closers' collection

@@ -1,23 +1,29 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { Lead } from "@/types";
 import { useAuth } from "@/hooks/use-auth";
 import { db } from "@/lib/firebase";
-import { collection, query, where, onSnapshot, orderBy, limit } from "firebase/firestore";
+import { collection, query, where, onSnapshot, orderBy, limit, writeBatch, doc, serverTimestamp } from "firebase/firestore";
 import LeadCard from "./lead-card";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ListChecks, CalendarClock, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
+
+const FORTY_FIVE_MINUTES_MS = 45 * 60 * 1000;
 
 export default function LeadQueue() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [waitingLeads, setWaitingLeads] = useState<Lead[]>([]);
   const [scheduledLeads, setScheduledLeads] = useState<Lead[]>([]);
   const [loadingWaiting, setLoadingWaiting] = useState(true);
   const [loadingScheduled, setLoadingScheduled] = useState(true);
+  const [processedLeadIds, setProcessedLeadIds] = useState<Set<string>>(new Set());
+
 
   useEffect(() => {
     if (!user || !user.teamId) {
@@ -47,6 +53,7 @@ export default function LeadQueue() {
     return () => unsubscribeWaiting();
   }, [user]);
 
+  // Effect for fetching scheduled leads and processing them
   useEffect(() => {
     if (!user || !user.teamId) {
       setLoadingScheduled(false);
@@ -58,21 +65,64 @@ export default function LeadQueue() {
       collection(db, "leads"),
       where("teamId", "==", user.teamId),
       where("status", "==", "rescheduled"),
-      orderBy("updatedAt", "desc"), // Or perhaps 'scheduledAt' if you add such a field
-      limit(20)
+      orderBy("scheduledAppointmentTime", "asc") // Order by appointment time to process soonest first
     );
 
-    const unsubscribeScheduled = onSnapshot(qScheduled, (querySnapshot) => {
+    const unsubscribeScheduled = onSnapshot(qScheduled, async (querySnapshot) => {
       const leadsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lead));
       setScheduledLeads(leadsData);
       setLoadingScheduled(false);
+
+      // Process leads that need to be moved
+      const now = new Date();
+      const leadsToMoveBatch = writeBatch(db);
+      let movedCount = 0;
+
+      leadsData.forEach(lead => {
+        if (lead.scheduledAppointmentTime && !processedLeadIds.has(lead.id)) {
+          const appointmentTime = lead.scheduledAppointmentTime.toDate();
+          const timeUntilAppointment = appointmentTime.getTime() - now.getTime();
+
+          // If current time is 45 mins before appointment or appointment has passed
+          if (timeUntilAppointment <= FORTY_FIVE_MINUTES_MS) {
+            const leadRef = doc(db, "leads", lead.id);
+            leadsToMoveBatch.update(leadRef, {
+              status: "waiting_assignment", // Move to waiting list
+              updatedAt: serverTimestamp(),
+              // assignedCloserId and assignedCloserName remain as they were
+            });
+            movedCount++;
+            // Add to processedLeadIds to prevent immediate re-processing by this client
+            // This is a client-side guard; backend processing is more robust.
+            setProcessedLeadIds(prev => new Set(prev).add(lead.id));
+          }
+        }
+      });
+
+      if (movedCount > 0) {
+        try {
+          await leadsToMoveBatch.commit();
+          toast({
+            title: "Leads Updated",
+            description: `${movedCount} scheduled lead(s) moved to waiting list.`,
+          });
+        } catch (error) {
+          console.error("Error moving scheduled leads:", error);
+          toast({
+            title: "Update Failed",
+            description: "Could not move scheduled leads automatically.",
+            variant: "destructive",
+          });
+        }
+      }
     }, (error) => {
       console.error("Error fetching scheduled leads:", error);
       setLoadingScheduled(false);
     });
-
+    
     return () => unsubscribeScheduled();
-  }, [user]);
+  }, [user, toast, processedLeadIds]);
+
 
   return (
     <Card className="h-full flex flex-col shadow-lg">

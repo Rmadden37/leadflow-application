@@ -10,23 +10,17 @@ import {
   XCircle,
   Ban,
   CalendarClock,
-  CreditCard, // Corrected from CreditCardOff
+  CreditCard, 
   User,
   Phone,
-  MoreHorizontal,
+  Clock, // Changed from MoreHorizontal for scheduled time
   ClipboardList
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import LeadDispositionModal from "./lead-disposition-modal";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, format as formatDate } from 'date-fns';
 
 
 interface LeadCardProps {
@@ -47,7 +41,7 @@ const getStatusIcon = (status: Lead["status"]) => {
     case "rescheduled":
       return <CalendarClock className="h-5 w-5 text-purple-500" />;
     case "credit_fail":
-      return <CreditCard className="h-5 w-5 text-orange-500" />; // Corrected from CreditCardOff
+      return <CreditCard className="h-5 w-5 text-orange-500" />; 
     case "waiting_assignment":
       return <ClipboardList className="h-5 w-5 text-gray-500" />;
     default:
@@ -78,6 +72,9 @@ export default function LeadCard({ lead, context = "in-process" }: LeadCardProps
   const canUpdateDisposition = user?.role === "closer" && lead.assignedCloserId === user.uid && context === "in-process";
 
   const timeAgo = lead.updatedAt ? formatDistanceToNow(lead.updatedAt.toDate(), { addSuffix: true }) : 'N/A';
+  const scheduledTimeDisplay = lead.status === 'rescheduled' && lead.scheduledAppointmentTime 
+    ? formatDate(lead.scheduledAppointmentTime.toDate(), "MMM d, p") 
+    : null;
 
   return (
     <>
@@ -103,6 +100,20 @@ export default function LeadCard({ lead, context = "in-process" }: LeadCardProps
             <div className="flex items-center text-muted-foreground">
               <User className="mr-2 h-4 w-4" />
               <span>Assigned to: {lead.assignedCloserName}</span>
+            </div>
+          )}
+          {/* Display scheduled time if available and status is rescheduled */}
+          {scheduledTimeDisplay && (
+             <div className="flex items-center text-muted-foreground text-purple-600">
+              <Clock className="mr-2 h-4 w-4" />
+              <span>Scheduled: {scheduledTimeDisplay}</span>
+            </div>
+          )}
+           {/* Display assigned closer if in queue and assigned */}
+           {context === "queue" && lead.assignedCloserName && lead.status === "waiting_assignment" && (
+            <div className="flex items-center text-muted-foreground text-blue-600">
+              <User className="mr-2 h-4 w-4" />
+              <span>Previously with: {lead.assignedCloserName}</span>
             </div>
           )}
         </CardContent>
