@@ -46,6 +46,7 @@ export default function TeamUserManagement() {
       return () => unsubscribe();
     } else {
       setLoading(false);
+      setTeamUsers([]); 
     }
   }, [managerUser, toast]);
 
@@ -106,7 +107,7 @@ export default function TeamUserManagement() {
   }
 
   if (!managerUser || managerUser.role !== "manager") {
-    return null; // Should not happen if rendered correctly, but defensive
+    return null; 
   }
   
   return (
@@ -121,7 +122,7 @@ export default function TeamUserManagement() {
         </CardHeader>
         <CardContent className="space-y-4">
           {teamUsers.length === 0 ? (
-            <p className="text-muted-foreground text-center py-4">No other users found in your team.</p>
+            <p className="text-muted-foreground text-center py-4">No other team members found (you are not listed here).</p>
           ) : (
             <ul className="divide-y divide-border">
               {teamUsers.map((teamMember) => (
@@ -182,5 +183,3 @@ export default function TeamUserManagement() {
     </>
   );
 }
-
-    
