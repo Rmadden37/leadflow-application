@@ -79,8 +79,7 @@ export default {
         sm: 'calc(var(--radius) - 4px)',
       },
       boxShadow: { 
-        // More pronounced LED glow effect for cards in dark mode
-        'card-glow-dark': '0 0 25px 2px hsla(var(--primary), 0.5), 0 0 45px 5px hsla(var(--primary), 0.3)',
+        // Removed 'card-glow-dark' as it's replaced by frosted glass effect
       },
       keyframes: {
         'accordion-down': {

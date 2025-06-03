@@ -57,48 +57,39 @@
   }
 
   .dark {
-    /* Minimalistic Dark Blue-Green Gradient Background */
-    /* Swatch 1: #011126 (hsla(213, 96%, 7%, 1)) */
-    /* Swatch 2: #0A5159 (hsla(185, 80%, 19%, 1)) */
-    /* Swatch 3: #197362 (hsla(168, 63%, 27%, 1)) */
-    /* Swatch 4: #268C6F (hsla(163, 57%, 34%, 1)) */
-    /* Swatch 5: #63BF8B (hsla(146, 41%, 57%, 1)) */
+    --background: 220 20% 5%; /* Very dark base for solid backgrounds */
+    --foreground: 0 0% 95%;   /* Light grey/off-white text */
 
-    --background: 213 96% 7%; /* Swatch 1 */
-    --foreground: 146 41% 57%; /* Swatch 5 */
+    --background-gradient-from: 213 96% 7%; /* Swatch 1: #011126 */
+    --background-gradient-to: 220 30% 4%;   /* Even darker, almost pure black */
 
-    /* Solid dark background for dark mode body */
-    --background-gradient-from: 213 96% 7%; /* Swatch 1 */
-    --background-gradient-to: 213 96% 7%; /* Swatch 1 */
+    --muted: 210 15% 20%;
+    --muted-foreground: 210 15% 60%;
 
-    --muted: 213 96% 10%; /* Slightly lighter than background */
-    --muted-foreground: 146 41% 40%; /* Darker version of Swatch 5 */
+    --popover: 213 50% 9%; /* Dark popover base */
+    --popover-foreground: 0 0% 95%;
 
-    --popover: 185 80% 19%; /* Swatch 2 */
-    --popover-foreground: 146 41% 57%; /* Swatch 5 */
+    --card: 200 10% 12%; /* Base for frosted glass - will be made semi-transparent on component */
+    --card-foreground: 0 0% 90%; /* Text on cards */
 
-    --card: 185 80% 19%; /* Swatch 2 */
-    --card-foreground: 146 41% 57%; /* Swatch 5 */
+    --border: 163 50% 30% / 0.3; /* Subtle border hint using a palette color, semi-transparent */
+    --input: 200 10% 15% / 0.4;  /* Semi-transparent input background */
 
-    --border: 185 80% 25%; /* Slightly lighter than Swatch 2 */
-    --input: 185 80% 25%; /* Slightly lighter than Swatch 2 */
+    --primary: 163 50% 35%; /* Hint of Swatch 4: #268C6F, desaturated */
+    --primary-foreground: 0 0% 100%; 
+    --primary-gradient-from: 163 50% 40%;
+    --primary-gradient-to: 163 50% 30%;
 
-    --primary: 163 57% 34%; /* Swatch 4 */
-    --primary-foreground: 0 0% 100%; /* White for contrast on Swatch 4 */
-    --primary-gradient-from: 163 57% 39%; /* Brighter version of Swatch 4 */
-    --primary-gradient-to: 163 57% 29%; /* Darker version of Swatch 4 */
+    --secondary: 168 45% 25%; /* Hint of Swatch 3: #197362, desaturated */
+    --secondary-foreground: 0 0% 90%;
 
+    --accent: 146 35% 50%; /* Hint of Swatch 5: #63BF8B, desaturated */
+    --accent-foreground: 213 96% 7%;
 
-    --secondary: 168 63% 27%; /* Swatch 3 */
-    --secondary-foreground: 146 41% 57%; /* Swatch 5 for text on Swatch 3 */
-
-    --accent: 163 57% 34%; /* Using Swatch 4 (Primary) as general accent */
-    --accent-foreground: 0 0% 100%; /* White text on accent */
-
-    --destructive: 0 70% 50%; 
+    --destructive: 0 60% 45%; 
     --destructive-foreground: 0 0% 100%; 
 
-    --ring: 163 57% 34%; /* Swatch 4 for ring */
+    --ring: 163 50% 35%; 
 
     /* Chart colors remain as previously defined for dark mode, can be adjusted if needed */
     --chart-1: 220 70% 50%;
