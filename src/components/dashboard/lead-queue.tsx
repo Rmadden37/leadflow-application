@@ -75,7 +75,7 @@ export default function LeadQueue() {
     const qScheduled = query(
       collection(db, "leads"),
       where("teamId", "==", user.teamId),
-      where("status", "in", ["rescheduled", "scheduled"]), // Updated to include "scheduled" status
+      where("status", "in", ["rescheduled", "scheduled"]), 
       orderBy("scheduledAppointmentTime", "asc") 
     );
     console.log("[LeadQueue - ScheduledList] Querying for rescheduled and scheduled leads. Query:", qScheduled);
@@ -88,31 +88,31 @@ export default function LeadQueue() {
       setScheduledLeads(leadsData);
       setLoadingScheduled(false);
 
-      // Process leads that need to be moved
       const now = new Date();
       const leadsToMoveBatch = writeBatch(db);
       let movedCount = 0;
       console.log(`[LeadQueue - ScheduledList] Processing ${leadsData.length} scheduled/rescheduled leads at ${now.toISOString()}`);
 
       leadsData.forEach(lead => {
-        // Only process if it has an appointment time and hasn't been processed by this client session yet
         if (lead.scheduledAppointmentTime && (lead.status === "rescheduled" || lead.status === "scheduled") && !processedLeadIds.has(lead.id)) {
           const appointmentTime = lead.scheduledAppointmentTime.toDate();
           const timeUntilAppointment = appointmentTime.getTime() - now.getTime();
           
           console.log(`[LeadQueue - ScheduledList] Lead ID: ${lead.id}, Status: ${lead.status}, Appt Time: ${appointmentTime.toISOString()}, Time Until: ${timeUntilAppointment}ms`);
 
-          // If current time is 45 mins before appointment or appointment has passed
           if (timeUntilAppointment <= FORTY_FIVE_MINUTES_MS) {
-            console.log(`[LeadQueue - ScheduledList] Moving lead ID: ${lead.id} to waiting_assignment. Original closer: ${lead.assignedCloserName}`);
+            console.log(`[LeadQueue - ScheduledList] Moving lead ID: ${lead.id} to waiting_assignment. Original closer ID: ${lead.assignedCloserId}, Name: ${lead.assignedCloserName}`);
             const leadRef = doc(db, "leads", lead.id);
             leadsToMoveBatch.update(leadRef, {
               status: "waiting_assignment", 
               updatedAt: serverTimestamp(),
-              // Keep assignedCloserId and assignedCloserName to indicate who it was previously with
+              // IMPORTANT: Do NOT clear assignedCloserId and assignedCloserName here.
+              // They are preserved to show "Prev. Closer" if applicable.
+              // scheduledAppointmentTime remains, as the lead is no longer in 'scheduled' status,
+              // so it won't show in the "Scheduled" tab.
             });
             movedCount++;
-            setProcessedLeadIds(prev => new Set(prev).add(lead.id)); // Mark as processed
+            setProcessedLeadIds(prev => new Set(prev).add(lead.id)); 
           }
         } else if (processedLeadIds.has(lead.id)) {
             console.log(`[LeadQueue - ScheduledList] Lead ID: ${lead.id} was already processed for moving by this client session.`);
@@ -137,7 +137,6 @@ export default function LeadQueue() {
             description: "Could not move scheduled leads automatically.",
             variant: "destructive",
           });
-           // If batch commit fails, remove IDs from processedLeadIds so they can be retried
           const failedLeadIds = leadsData
             .filter(lead => lead.scheduledAppointmentTime && (lead.status === "rescheduled" || lead.status === "scheduled") && (lead.scheduledAppointmentTime.toDate().getTime() - now.getTime() <= FORTY_FIVE_MINUTES_MS))
             .map(lead => lead.id);
@@ -163,8 +162,8 @@ export default function LeadQueue() {
   return (
     <Card className="h-full flex flex-col shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-2xl font-bold font-headline flex items-center justify-center w-full"> {/* Updated class */}
-          <ListChecks className="mr-2 h-7 w-7 text-primary" /> {/* Adjusted icon size */}
+        <CardTitle className="text-2xl font-bold font-headline flex items-center justify-center w-full">
+          <ListChecks className="mr-2 h-7 w-7 text-primary" />
           Lead Queues
         </CardTitle>
         {(loadingWaiting || loadingScheduled) && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
@@ -192,7 +191,7 @@ export default function LeadQueue() {
               <ScrollArea className="h-[280px] md:h-[380px] pr-4">
                 <div className="space-y-4">
                   {waitingLeads.map(lead => (
-                    <LeadCard key={lead.id} lead={lead} context="queue" />
+                    <LeadCard key={lead.id} lead={lead} context="queue-waiting" />
                   ))}
                 </div>
               </ScrollArea>
@@ -211,7 +210,7 @@ export default function LeadQueue() {
               <ScrollArea className="h-[280px] md:h-[380px] pr-4">
                 <div className="space-y-4">
                   {scheduledLeads.map(lead => (
-                    <LeadCard key={lead.id} lead={lead} context="queue" />
+                    <LeadCard key={lead.id} lead={lead} context="queue-scheduled" />
                   ))}
                 </div>
               </ScrollArea>
@@ -222,4 +221,3 @@ export default function LeadQueue() {
     </Card>
   );
 }
-

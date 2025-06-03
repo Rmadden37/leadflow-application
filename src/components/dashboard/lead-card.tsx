@@ -11,13 +11,13 @@ import {
   Ban,
   CalendarClock,
   CreditCard,
-  User as UserIcon, // Renamed to avoid conflict with useAuth's User
+  User as UserIcon, 
   Phone,
   Clock,
   ClipboardList,
   MapPin,
   Mail, 
-  Image as ImageIcon, 
+  ImageIcon, 
   Zap, 
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -29,7 +29,7 @@ import { formatDistanceToNow, format as formatDate } from 'date-fns';
 
 interface LeadCardProps {
   lead: Lead;
-  context?: "in-process" | "queue" | "all-leads"; 
+  context?: "in-process" | "queue-waiting" | "queue-scheduled" | "all-leads"; 
 }
 
 const getStatusIcon = (status: Lead["status"]) => {
@@ -72,7 +72,7 @@ const getStatusVariant = (status: Lead["status"]): "default" | "secondary" | "de
 
 
 export default function LeadCard({ lead, context = "in-process" }: LeadCardProps) {
-  const { user } = useAuth(); // `user` here is AppUser from `users` collection
+  const { user } = useAuth(); 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const canUpdateDisposition = user?.role === "closer" && lead.assignedCloserId === user.uid && lead.status === "in_process";
@@ -83,23 +83,59 @@ export default function LeadCard({ lead, context = "in-process" }: LeadCardProps
     ? formatDate(lead.scheduledAppointmentTime.toDate(), "MMM d, p")
     : null;
 
+  // Compact display for scheduled leads in the queue
+  if (context === "queue-scheduled") {
+    return (
+      <Card className="shadow-md hover:shadow-lg transition-shadow duration-200 flex flex-col dark:bg-black/[.15] dark:border-white/[.08]">
+        <CardHeader className="pb-3 pt-4 px-4">
+          <div className="flex justify-between items-start">
+            <div className="flex items-center">
+              <UserIcon className="mr-2 h-5 w-5 text-primary flex-shrink-0" />
+              <div>
+                <CardTitle className="text-base font-semibold font-headline text-left">
+                  {lead.customerName}
+                </CardTitle>
+                 <CardDescription className="text-xs text-muted-foreground text-left">
+                  Created {timeCreatedAgo}
+                </CardDescription>
+              </div>
+            </div>
+            <Badge variant={getStatusVariant(lead.status)} className="capitalize text-xs flex items-center gap-1 whitespace-nowrap ml-2">
+              {getStatusIcon(lead.status)}
+              {lead.status.replace("_", " ")}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="text-sm space-y-1.5 pb-3 px-4 flex-grow">
+          {scheduledTimeDisplay && (
+             <div className="flex items-center text-muted-foreground text-purple-600 font-medium">
+              <Clock className="mr-2 h-4 w-4 flex-shrink-0" />
+              <span>Scheduled: {scheduledTimeDisplay}</span>
+            </div>
+          )}
+        </CardContent>
+        {/* No footer or disposition button for this context */}
+      </Card>
+    );
+  }
+
   return (
     <>
       <Card className="shadow-md hover:shadow-lg transition-shadow duration-200 flex flex-col dark:bg-black/[.15] dark:border-white/[.08]">
         <CardHeader className="pb-3 pt-4 px-4">
           <div className="flex justify-between items-start">
-            <div className="flex items-center"> {/* Flex container for icon and title */}
-              <UserIcon className="mr-2 h-5 w-5 text-primary flex-shrink-0" /> {/* Person icon */}
+            <div className="flex items-center">
+              <UserIcon className="mr-2 h-5 w-5 text-primary flex-shrink-0" />
               <div>
-                <CardTitle className="text-base font-semibold font-headline text-left"> {/* Ensure text-left for the title if it's now in a flex item */}
+                <CardTitle className="text-base font-semibold font-headline text-left">
                   {lead.customerName}
                 </CardTitle>
-                <CardDescription className="text-xs text-muted-foreground text-left"> {/* Ensure text-left for description */}
+                <CardDescription className="text-xs text-muted-foreground text-left">
                   Created {timeCreatedAgo}
                 </CardDescription>
               </div>
             </div>
-            <Badge variant={getStatusVariant(lead.status)} className="capitalize text-xs flex items-center gap-1 whitespace-nowrap ml-2"> {/* Added ml-2 for spacing */}
+            <Badge variant={getStatusVariant(lead.status)} className="capitalize text-xs flex items-center gap-1 whitespace-nowrap ml-2">
               {getStatusIcon(lead.status)}
               {lead.status.replace("_", " ")}
             </Badge>
@@ -121,24 +157,28 @@ export default function LeadCard({ lead, context = "in-process" }: LeadCardProps
             <span className="capitalize">{lead.dispatchType} Dispatch</span>
           </div>
 
-          {(context === "in-process" || context === "all-leads") && lead.assignedCloserName && (
-            <div className="flex items-center text-muted-foreground">
-              <UserIcon className="mr-2 h-4 w-4 flex-shrink-0" />
-              <span>Assigned: {lead.assignedCloserName}</span>
-            </div>
+          {/* Display "Assigned:" or "Prev. Closer:" based on context and status */}
+          {lead.assignedCloserName && (
+            (context === "queue-waiting" && lead.status === "waiting_assignment") ? (
+              <div className="flex items-center text-blue-600 dark:text-blue-400">
+                <UserIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+                <span>Prev. Closer: {lead.assignedCloserName}</span>
+              </div>
+            ) : (lead.status === "in_process" || (context === "all-leads" && lead.status !== "waiting_assignment")) ? (
+              <div className="flex items-center text-muted-foreground">
+                <UserIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+                <span>Assigned: {lead.assignedCloserName}</span>
+              </div>
+            ) : null
           )}
+
           {scheduledTimeDisplay && (
              <div className="flex items-center text-muted-foreground text-purple-600">
               <Clock className="mr-2 h-4 w-4 flex-shrink-0" />
               <span>Scheduled: {scheduledTimeDisplay}</span>
             </div>
           )}
-           {(context === "queue" || context === "all-leads") && lead.assignedCloserName && lead.status === "waiting_assignment" && (
-            <div className="flex items-center text-muted-foreground text-blue-600">
-              <UserIcon className="mr-2 h-4 w-4 flex-shrink-0" />
-              <span>Prev. Closer: {lead.assignedCloserName}</span>
-            </div>
-          )}
+
           {user?.role === 'manager' && lead.setterName && (
             <div className="flex items-center text-muted-foreground text-xs mt-1">
               <UserIcon className="mr-2 h-3 w-3 text-gray-400 flex-shrink-0" />
@@ -188,5 +228,3 @@ export default function LeadCard({ lead, context = "in-process" }: LeadCardProps
     </>
   );
 }
-
-    
