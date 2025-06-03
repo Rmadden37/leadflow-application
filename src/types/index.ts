@@ -21,24 +21,29 @@ export type LeadStatus =
   | "no_sale"
   | "canceled"
   | "rescheduled"
-  | "scheduled" // Added new status
+  | "scheduled"
   | "credit_fail";
+
+export type DispatchType = "immediate" | "scheduled";
 
 export interface Lead {
   id: string;
   customerName: string;
   customerPhone: string;
+  address?: string; // New field for address
   status: LeadStatus;
   teamId: string;
+  dispatchType: DispatchType; // New field for dispatch type
   assignedCloserId?: string | null;
   assignedCloserName?: string | null;
   createdAt: Timestamp;
   updatedAt: Timestamp;
   dispositionNotes?: string;
-  scheduledAppointmentTime?: Timestamp | null;
+  scheduledAppointmentTime?: Timestamp | null; // Will be used for scheduled dispatch time as well
   setterId?: string;
   setterName?: string;
   setterLocation?: GeoPoint | null;
+  photoUrls?: string[]; // New field for photo URLs (placeholder for now)
 }
 
 // Updated Closer type to reflect the fields in the 'closers' collection
@@ -51,4 +56,3 @@ export interface Closer {
   avatarUrl?: string;
   phone?: string;
 }
-

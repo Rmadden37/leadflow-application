@@ -1,7 +1,7 @@
 
 "use client";
 
-import type { Lead, AppUser } from "@/types";
+import type { Lead } from "@/types";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +15,10 @@ import {
   Phone,
   Clock,
   ClipboardList,
-  MapPin
+  MapPin,
+  Mail, // Using Mail for address, generic enough
+  Image as ImageIcon, // For photo indication
+  Zap, // For dispatch type
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
@@ -26,7 +29,7 @@ import { formatDistanceToNow, format as formatDate } from 'date-fns';
 
 interface LeadCardProps {
   lead: Lead;
-  context?: "in-process" | "queue";
+  context?: "in-process" | "queue" | "all-leads"; // Added "all-leads" context
 }
 
 const getStatusIcon = (status: Lead["status"]) => {
@@ -40,7 +43,7 @@ const getStatusIcon = (status: Lead["status"]) => {
     case "canceled":
       return <Ban className="h-5 w-5 text-yellow-500" />;
     case "rescheduled":
-    case "scheduled": // Added new status
+    case "scheduled":
       return <CalendarClock className="h-5 w-5 text-purple-500" />;
     case "credit_fail":
       return <CreditCard className="h-5 w-5 text-orange-500" />;
@@ -61,7 +64,7 @@ const getStatusVariant = (status: Lead["status"]): "default" | "secondary" | "de
       return "destructive";
     case "waiting_assignment":
     case "rescheduled":
-    case "scheduled": // Added new status
+    case "scheduled":
       return "outline";
     default: return "outline";
   }
@@ -72,7 +75,7 @@ export default function LeadCard({ lead, context = "in-process" }: LeadCardProps
   const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const canUpdateDisposition = user?.role === "closer" && lead.assignedCloserId === user.uid && context === "in-process";
+  const canUpdateDisposition = user?.role === "closer" && lead.assignedCloserId === user.uid && lead.status === "in_process";
 
   const timeCreatedAgo = lead.createdAt ? formatDistanceToNow(lead.createdAt.toDate(), { addSuffix: true }) : 'N/A';
   
@@ -82,53 +85,64 @@ export default function LeadCard({ lead, context = "in-process" }: LeadCardProps
 
   return (
     <>
-      <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
+      <Card className="shadow-md hover:shadow-lg transition-shadow duration-200 flex flex-col">
         <CardHeader className="pb-3 pt-4 px-4">
           <div className="flex justify-between items-start">
             <div>
               <CardTitle className="text-base font-semibold font-headline">{lead.customerName}</CardTitle>
               <CardDescription className="text-xs text-muted-foreground">Created {timeCreatedAgo}</CardDescription>
             </div>
-            <Badge variant={getStatusVariant(lead.status)} className="capitalize text-xs flex items-center gap-1">
+            <Badge variant={getStatusVariant(lead.status)} className="capitalize text-xs flex items-center gap-1 whitespace-nowrap">
               {getStatusIcon(lead.status)}
               {lead.status.replace("_", " ")}
             </Badge>
           </div>
         </CardHeader>
-        <CardContent className="text-sm space-y-1 pb-3 px-4">
+        <CardContent className="text-sm space-y-1.5 pb-3 px-4 flex-grow">
           <div className="flex items-center text-muted-foreground">
-            <Phone className="mr-2 h-4 w-4" />
+            <Phone className="mr-2 h-4 w-4 flex-shrink-0" />
             <span>{lead.customerPhone}</span>
           </div>
-          {context === "in-process" && lead.assignedCloserName && (
+          {lead.address && (
+            <div className="flex items-start text-muted-foreground">
+              <Mail className="mr-2 h-4 w-4 flex-shrink-0 mt-0.5" />
+              <span className="truncate" title={lead.address}>{lead.address}</span>
+            </div>
+          )}
+          <div className="flex items-center text-muted-foreground">
+            <Zap className="mr-2 h-4 w-4 flex-shrink-0" />
+            <span className="capitalize">{lead.dispatchType} Dispatch</span>
+          </div>
+
+          {(context === "in-process" || context === "all-leads") && lead.assignedCloserName && (
             <div className="flex items-center text-muted-foreground">
-              <User className="mr-2 h-4 w-4" />
-              <span>Assigned to: {lead.assignedCloserName}</span>
+              <User className="mr-2 h-4 w-4 flex-shrink-0" />
+              <span>Assigned: {lead.assignedCloserName}</span>
             </div>
           )}
           {scheduledTimeDisplay && (
              <div className="flex items-center text-muted-foreground text-purple-600">
-              <Clock className="mr-2 h-4 w-4" />
+              <Clock className="mr-2 h-4 w-4 flex-shrink-0" />
               <span>Scheduled: {scheduledTimeDisplay}</span>
             </div>
           )}
-           {context === "queue" && lead.assignedCloserName && lead.status === "waiting_assignment" && (
+           {(context === "queue" || context === "all-leads") && lead.assignedCloserName && lead.status === "waiting_assignment" && (
             <div className="flex items-center text-muted-foreground text-blue-600">
-              <User className="mr-2 h-4 w-4" />
-              <span>Previously with: {lead.assignedCloserName}</span>
+              <User className="mr-2 h-4 w-4 flex-shrink-0" />
+              <span>Prev. Closer: {lead.assignedCloserName}</span>
             </div>
           )}
           {user?.role === 'manager' && lead.setterName && (
             <div className="flex items-center text-muted-foreground text-xs mt-1">
-              <User className="mr-2 h-3 w-3 text-gray-400" />
+              <User className="mr-2 h-3 w-3 text-gray-400 flex-shrink-0" />
               <span>Set by: {lead.setterName}</span>
             </div>
           )}
           {user?.role === 'manager' && lead.setterLocation && (
             <div className="flex items-center text-muted-foreground text-xs mt-1">
-              <MapPin className="mr-2 h-3 w-3 text-gray-400" />
+              <MapPin className="mr-2 h-3 w-3 text-gray-400 flex-shrink-0" />
               <span>
-                Loc: {lead.setterLocation.latitude.toFixed(4)}, {lead.setterLocation.longitude.toFixed(4)}
+                Loc: {lead.setterLocation.latitude.toFixed(2)}, {lead.setterLocation.longitude.toFixed(2)}
                 {' '}
                 <a
                   href={`https://www.google.com/maps?q=${lead.setterLocation.latitude},${lead.setterLocation.longitude}`}
@@ -140,6 +154,12 @@ export default function LeadCard({ lead, context = "in-process" }: LeadCardProps
                   (Map)
                 </a>
               </span>
+            </div>
+          )}
+           {lead.photoUrls && lead.photoUrls.length > 0 && (
+            <div className="flex items-center text-muted-foreground text-xs mt-1">
+              <ImageIcon className="mr-2 h-3 w-3 text-gray-400 flex-shrink-0" />
+              <span>{lead.photoUrls.length} photo(s) attached (viewing not yet implemented)</span>
             </div>
           )}
         </CardContent>
@@ -161,4 +181,3 @@ export default function LeadCard({ lead, context = "in-process" }: LeadCardProps
     </>
   );
 }
-
