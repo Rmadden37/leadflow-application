@@ -9,7 +9,7 @@ import { collection, query, where, onSnapshot, orderBy, limit, Timestamp } from 
 import LeadCard from "./lead-card";
 import CloserCard from "./closer-card";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Activity, Loader2, Ghost } from "lucide-react"; // Removed UserCircle as sample is removed
+import { Activity, Loader2, Ghost } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface InProcessDisplayItem {
@@ -17,14 +17,39 @@ interface InProcessDisplayItem {
   closer?: Closer; // Closer assigned to this lead
 }
 
+// --- Sample Data for Demonstration ---
+const sampleCloserDemo: Closer = {
+  uid: "sample-nextup-closer-uid",
+  name: "NextUp Closer (Demo)",
+  status: "On Duty",
+  teamId: "sample-team-id", // This should match your teamId for visibility if testing
+  role: "closer",
+  avatarUrl: `https://placehold.co/100x100.png`, // Generic placeholder
+  lineupOrder: 1,
+};
+
+const sampleLeadAssignedToDemo: Lead = {
+  id: "sample-dynamic-demo-lead-id",
+  customerName: "Dynamic Demo Lead",
+  customerPhone: "(555) 000-DEMO",
+  address: "123 Simulation Street",
+  status: "in_process",
+  teamId: "sample-team-id", // This should match your teamId for visibility if testing
+  dispatchType: "immediate",
+  assignedCloserId: sampleCloserDemo.uid,
+  assignedCloserName: sampleCloserDemo.name,
+  createdAt: Timestamp.now(),
+  updatedAt: Timestamp.now(),
+  setterName: "Demo Setter",
+};
+// --- End Sample Data ---
+
 export default function InProcessLeads() {
   const { user } = useAuth();
   const [displayItems, setDisplayItems] = useState<InProcessDisplayItem[]>([]);
   const [loadingLeads, setLoadingLeads] = useState(true);
   const [loadingClosers, setLoadingClosers] = useState(true);
   const [allTeamClosers, setAllTeamClosers] = useState<Closer[]>([]);
-
-  // Sample data removed
 
   // Fetch all closers for the team
   useEffect(() => {
@@ -115,14 +140,29 @@ export default function InProcessLeads() {
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden">
         {displayItems.length === 0 && !isLoading ? (
-          <div className="flex h-full flex-col items-center justify-center text-center p-6">
-            <Ghost
-              className="h-32 w-32 text-muted-foreground opacity-10 mb-4"
-              data-ai-hint="ghost town"
-            />
-            <p className="text-muted-foreground text-lg">It's quiet... too quiet...</p>
-            <p className="text-xs text-muted-foreground mt-1">No leads are currently in process.</p>
-          </div>
+          // Display sample data if no real in-process leads
+          <ScrollArea className="h-[300px] md:h-[400px] pr-4">
+            <div className="space-y-4 p-4 border border-dashed border-muted-foreground rounded-md">
+              <p className="text-sm text-muted-foreground text-center mb-2">
+                Showing a sample assignment (no real leads "in process" currently).
+              </p>
+              <div className="space-y-2">
+                <CloserCard
+                  closer={sampleCloserDemo}
+                  assignedLeadName={sampleLeadAssignedToDemo.customerName}
+                  allowInteractiveToggle={false}
+                />
+                <LeadCard lead={sampleLeadAssignedToDemo} context="in-process" />
+              </div>
+              <p className="text-xs text-muted-foreground text-center mt-4">
+                <strong>What would happen:</strong>
+                <br />
+                - "Dynamic Demo Lead" would disappear from the Lead Queue's "Waiting List".
+                <br />
+                - "NextUp Closer (Demo)" would disappear from the "Closer Lineup".
+              </p>
+            </div>
+          </ScrollArea>
         ) : (
           <ScrollArea className="h-[300px] md:h-[400px] pr-4">
             <div className="space-y-4">
@@ -138,7 +178,6 @@ export default function InProcessLeads() {
                   <LeadCard lead={lead} context="in-process" />
                 </div>
               ))}
-              {/* Sample data display logic removed */}
             </div>
           </ScrollArea>
         )}
