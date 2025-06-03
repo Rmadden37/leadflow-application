@@ -15,30 +15,28 @@ import { useState } from "react";
 
 interface CloserCardProps {
   closer: Closer;
+  allowInteractiveToggle?: boolean; // New prop
 }
 
-export default function CloserCard({ closer }: CloserCardProps) {
-  const { user } = useAuth(); // user is AppUser from 'users' collection
+export default function CloserCard({ closer, allowInteractiveToggle = true }: CloserCardProps) {
+  const { user } = useAuth(); 
   const { toast } = useToast();
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
-  // Determine if the current user can toggle this closer's status
-  const canToggle = user && (user.role === 'manager' || (user.role === 'closer' && user.uid === closer.uid));
+  const canUserManagerOrSelfToggle = user && (user.role === 'manager' || (user.role === 'closer' && user.uid === closer.uid));
+  const showInteractiveToggle = canUserManagerOrSelfToggle && allowInteractiveToggle;
 
   const handleToggleCloserAvailability = async (checked: boolean) => {
-    if (!user || !canToggle) return; // Should not be callable if !canToggle, but defensive check
+    if (!user || !canUserManagerOrSelfToggle) return; 
     
     setIsUpdatingStatus(true);
     const newStatus = checked ? "On Duty" : "Off Duty";
 
     try {
-      // Document ID in 'closers' collection is assumed to be the closer's UID
       const closerDocRef = doc(db, "closers", closer.uid);
       await updateDoc(closerDocRef, {
         status: newStatus,
       });
-      // The parent components (CloserLineup/OffDutyClosers) listen to Firestore
-      // snapshots, so the UI should update automatically.
       toast({
         title: "Status Updated",
         description: `${closer.name || 'Closer'}'s status set to ${newStatus}.`,
@@ -67,7 +65,7 @@ export default function CloserCard({ closer }: CloserCardProps) {
           </Avatar>
           <div className="flex-1">
             <p className="text-sm font-medium font-headline">{closer.name || "Unnamed Closer"}</p>
-            {canToggle ? (
+            {showInteractiveToggle ? (
               <div className="flex items-center space-x-2 mt-1">
                 <Switch
                   id={`status-toggle-${closer.uid}`}

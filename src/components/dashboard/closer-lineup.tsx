@@ -76,7 +76,7 @@ export default function CloserLineup() {
            <ScrollArea className="h-[300px] md:h-[400px] pr-4">
             <div className="space-y-3">
               {closers.map(closer => (
-                <CloserCard key={closer.uid} closer={closer} />
+                <CloserCard key={closer.uid} closer={closer} allowInteractiveToggle={false} />
               ))}
             </div>
           </ScrollArea>
