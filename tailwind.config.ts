@@ -78,8 +78,9 @@ export default {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
-      boxShadow: { // Added custom boxShadow
-        'card-glow-dark': '0 0 10px hsla(var(--primary), 0.35), 0 0 20px hsla(var(--primary), 0.2)',
+      boxShadow: { 
+        // More pronounced LED glow effect for cards in dark mode
+        'card-glow-dark': '0 0 25px 2px hsla(var(--primary), 0.5), 0 0 45px 5px hsla(var(--primary), 0.3)',
       },
       keyframes: {
         'accordion-down': {
