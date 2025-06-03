@@ -37,6 +37,6 @@ export interface Lead {
 export interface Closer {
   uid: string;
   name: string;
-  status: "Available" | "Off Duty"; // This remains for UI display purposes
+  status: "On Duty" | "Off Duty"; // Changed from "Available" | "Off Duty"
   teamId: string;
 }

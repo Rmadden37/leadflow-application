@@ -28,7 +28,7 @@ export default function OffDutyClosers() {
       collection(db, "users"),
       where("teamId", "==", user.teamId),
       where("role", "==", "closer"),
-      where("status", "==", "Off Duty"), // Query for status "Off Duty"
+      where("status", "==", "Off Duty"), 
       orderBy("displayName", "asc")
     );
 
@@ -38,8 +38,7 @@ export default function OffDutyClosers() {
         return {
           uid: doc.id,
           name: data.displayName || data.email || "Unnamed Closer",
-          // If queried for "Off Duty", their display status is "Off Duty"
-          status: "Off Duty", 
+          status: "Off Duty", // Directly set as "Off Duty" as per query
           teamId: data.teamId,
         } as Closer;
       });
@@ -47,10 +46,6 @@ export default function OffDutyClosers() {
       setLoading(false);
     }, (error) => {
       console.error("Error fetching off-duty closers:", error);
-      // This specific error might be due to a missing index for the new query.
-      // Firestore will provide a link in the console to create it.
-      // Example error message: "The query requires an index. You can create it here: <link>"
-      // Index needed: users collection, teamId (ASC), role (ASC), status (ASC), displayName (ASC)
       setLoading(false);
     });
 

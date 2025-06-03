@@ -27,7 +27,7 @@ export default function CloserLineup() {
       collection(db, "users"),
       where("teamId", "==", user.teamId),
       where("role", "==", "closer"),
-      where("status", "==", "On Duty"), // Query for status "On Duty"
+      where("status", "==", "On Duty"), 
       orderBy("displayName", "asc")
     );
 
@@ -37,8 +37,7 @@ export default function CloserLineup() {
         return {
           uid: doc.id,
           name: data.displayName || data.email || "Unnamed Closer",
-          // Derive "Available" / "Off Duty" from AppUser.status for CloserCard
-          status: data.status === "On Duty" ? "Available" : "Off Duty", 
+          status: "On Duty", // Directly set as "On Duty" as per query
           teamId: data.teamId,
         } as Closer;
       });
@@ -46,10 +45,6 @@ export default function CloserLineup() {
       setLoading(false);
     }, (error) => {
       console.error("Error fetching closer lineup:", error);
-      // This specific error might be due to a missing index for the new query.
-      // Firestore will provide a link in the console to create it.
-      // Example error message: "The query requires an index. You can create it here: <link>"
-      // Index needed: users collection, teamId (ASC), role (ASC), status (ASC), displayName (ASC)
       setLoading(false);
     });
 
