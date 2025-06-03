@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Lead, AppUser } from "@/types";
@@ -9,7 +10,7 @@ import {
   XCircle,
   Ban,
   CalendarClock,
-  CreditCardOff,
+  CreditCard, // Corrected from CreditCardOff
   User,
   Phone,
   MoreHorizontal,
@@ -46,7 +47,7 @@ const getStatusIcon = (status: Lead["status"]) => {
     case "rescheduled":
       return <CalendarClock className="h-4 w-4 text-purple-500" />;
     case "credit_fail":
-      return <CreditCardOff className="h-4 w-4 text-orange-500" />;
+      return <CreditCard className="h-4 w-4 text-orange-500" />; // Corrected from CreditCardOff
     case "waiting_assignment":
       return <ClipboardList className="h-4 w-4 text-gray-500" />;
     default:
@@ -56,7 +57,7 @@ const getStatusIcon = (status: Lead["status"]) => {
 
 const getStatusVariant = (status: Lead["status"]): "default" | "secondary" | "destructive" | "outline" => {
   switch (status) {
-    case "sold": return "default"; // Primary color for success
+    case "sold": return "default"; 
     case "in_process": return "secondary";
     case "no_sale":
     case "credit_fail":

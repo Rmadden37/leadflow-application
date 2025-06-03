@@ -7,13 +7,15 @@ import { getFirestore } from "firebase/firestore";
 // Firebase project configuration values.
 // You can find these in your Firebase project settings in the Firebase Console.
 // For production, it's recommended to use environment variables.
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "YOUR_API_KEY",
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "YOUR_AUTH_DOMAIN",
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "YOUR_PROJECT_ID",
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "YOUR_STORAGE_BUCKET",
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "YOUR_MESSAGING_SENDER_ID",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "YOUR_APP_ID",
+  apiKey: "AIzaSyBc3jmFE6dRXBApmWD9Jg2PO86suqGgaZw",
+  authDomain: "leadflow-4lvrr.firebaseapp.com",
+  projectId: "leadflow-4lvrr",
+  storageBucket: "leadflow-4lvrr.firebasestorage.app",
+  messagingSenderId: "13877630896",
+  appId: "1:13877630896:web:ab7d2717024960ec36e875",
+  measurementId: "G-KDEF2C21SH"
 };
 
 // Initialize Firebase
