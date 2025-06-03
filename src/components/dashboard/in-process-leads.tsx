@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { db } from "@/lib/firebase";
 import { collection, query, where, onSnapshot, orderBy, limit, Timestamp } from "firebase/firestore";
 import LeadCard from "./lead-card";
-import CloserCard from "./closer-card"; // Import CloserCard
+import CloserCard from "./closer-card"; 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Activity, Loader2, Ghost, UserCircle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -26,22 +26,22 @@ export default function InProcessLeads() {
 
   // Sample data for demonstration when actual list is empty
   const sampleCloserAndrea: Closer = {
-    uid: "andrea-rovayo-uid",
-    name: "Andrea Rovayo",
+    uid: "sample-andrea-rovayo-uid", // Changed UID to be clearly a sample
+    name: "Andrea Rovayo (Sample)", // Added (Sample) to name
     status: "On Duty",
     teamId: user?.teamId || "demo-team",
     role: "closer",
-    avatarUrl: `https://ui-avatars.com/api/?name=Andrea+Rovayo&background=random&color=fff`, // Generic avatar
+    avatarUrl: `https://ui-avatars.com/api/?name=Andrea+Rovayo&background=random&color=fff&bold=true`, 
   };
   const sampleLeadAssignedToAndrea: Lead = {
     id: "sample-lead-andrea-01",
-    customerName: "Valued Customer Inc.",
+    customerName: "Valued Customer Inc. (Sample)",
     customerPhone: "(555) 123-DEMO",
     address: "789 Demo Drive, Sampletown",
     status: "in_process",
     teamId: user?.teamId || "demo-team",
     dispatchType: "immediate",
-    assignedCloserId: sampleCloserAndrea.uid,
+    assignedCloserId: sampleCloserAndrea.uid, // Use the new sample UID
     assignedCloserName: sampleCloserAndrea.name,
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
@@ -73,9 +73,8 @@ export default function InProcessLeads() {
 
   // Fetch in-process leads and combine with closer data
   useEffect(() => {
-    if (!user || !user.teamId || loadingClosers) { // Wait for closers to load
+    if (!user || !user.teamId || loadingClosers) { 
       if (!user || !user.teamId) setLoadingLeads(false);
-      // If closers are still loading, this effect will re-run once they are done.
       return;
     }
     setLoadingLeads(true);
@@ -118,7 +117,7 @@ export default function InProcessLeads() {
     });
 
     return () => unsubscribeLeads();
-  }, [user, allTeamClosers, loadingClosers]); // Re-run if allTeamClosers or its loading state changes
+  }, [user, allTeamClosers, loadingClosers]); 
 
   if (user?.role === 'setter') {
     return null; 
@@ -155,7 +154,7 @@ export default function InProcessLeads() {
                     <CloserCard 
                       closer={closer} 
                       assignedLeadName={lead.customerName}
-                      allowInteractiveToggle={false} // Cannot change status while assigned
+                      allowInteractiveToggle={false} 
                     />
                   )}
                   <LeadCard lead={lead} context="in-process" />
@@ -165,7 +164,7 @@ export default function InProcessLeads() {
                 <div className="mt-4 p-4 border border-dashed border-primary/50 rounded-lg bg-primary/5">
                   <div className="flex items-center text-sm text-primary mb-3">
                     <UserCircle className="mr-2 h-5 w-5" />
-                    <p className="font-medium">Example: Lead Assigned to Andrea Rovayo</p>
+                    <p className="font-medium">Example: Lead Assigned</p>
                   </div>
                    <div className="space-y-2">
                     <CloserCard 
@@ -187,3 +186,5 @@ export default function InProcessLeads() {
     </Card>
   );
 }
+
+    
