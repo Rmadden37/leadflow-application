@@ -57,6 +57,12 @@ export default function CloserLineup() {
       return;
     }
 
+    // Wait until the assigned closer IDs are loaded before fetching/filtering closers
+    if (loadingLeads) {
+        // setLoadingClosers(true); // Keep loading true if leads are still loading
+        return;
+    }
+
     setLoadingClosers(true);
 
     const q = query(
@@ -82,15 +88,13 @@ export default function CloserLineup() {
       });
 
       // Filter out closers who are currently assigned to an in-process lead
-      closersData = closersData.filter(closer => !inProcessLeadAssignedCloserIds.has(closer.uid));
+      const availableClosers = closersData.filter(closer => !inProcessLeadAssignedCloserIds.has(closer.uid));
       
       // Default and sort by lineupOrder client-side for the remaining closers
-      closersData = closersData.map((closer, index) => ({
+      const sortedAvailableClosers = availableClosers.map((closer, index) => ({
         ...closer,
-        lineupOrder: typeof closer.lineupOrder === 'number' ? closer.lineupOrder : (index + 1) * 100000,
-      }));
-
-      closersData.sort((a, b) => {
+        lineupOrder: typeof closer.lineupOrder === 'number' ? closer.lineupOrder : (index + 1) * 100000, // Default if missing
+      })).sort((a, b) => {
         const orderA = a.lineupOrder!; 
         const orderB = b.lineupOrder!;
         if (orderA !== orderB) {
@@ -99,7 +103,7 @@ export default function CloserLineup() {
         return a.name.localeCompare(b.name); // Fallback sort
       });
       
-      setClosers(closersData);
+      setClosers(sortedAvailableClosers);
       setLoadingClosers(false);
     }, (error) => {
       console.error("[CloserLineup] Error fetching closer lineup:", error);
@@ -107,7 +111,7 @@ export default function CloserLineup() {
     });
 
     return () => unsubscribeClosers();
-  }, [user, inProcessLeadAssignedCloserIds]); // Re-run if user or the set of assigned closer IDs changes
+  }, [user, inProcessLeadAssignedCloserIds, loadingLeads]); // Re-run if user, assigned closer IDs, or lead loading state changes
 
   const isLoading = loadingClosers || loadingLeads;
 
@@ -133,7 +137,7 @@ export default function CloserLineup() {
                 <CloserCard 
                   key={closer.uid} 
                   closer={closer} 
-                  allowInteractiveToggle={false} 
+                  allowInteractiveToggle={false} // Lineup card is display-only for status
                 />
               ))}
             </div>
