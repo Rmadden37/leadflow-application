@@ -17,33 +17,6 @@ interface InProcessDisplayItem {
   closer?: Closer; // Closer assigned to this lead
 }
 
-// --- Sample Data for Demonstration ---
-const sampleCloserAndrea: Closer = {
-  uid: "sample-andrea-rovayo-uid", // Unique sample UID
-  name: "Andrea Rovayo",
-  status: "On Duty", // She's working, so effectively 'On Duty'
-  teamId: "sample-team-id",
-  role: "closer",
-  avatarUrl: `https://placehold.co/100x100.png`, // Generic placeholder, matching image style
-  lineupOrder: 1,
-};
-
-const sampleLeadAssignedToAndrea: Lead = {
-  id: "sample-tony-the-tiger-lead-id", // Unique sample ID
-  customerName: "Tony the Tiger",
-  customerPhone: "(555) GRR-REAT",
-  address: "Kellogg's HQ, Battle Creek, MI",
-  status: "in_process",
-  teamId: "sample-team-id",
-  dispatchType: "immediate",
-  assignedCloserId: sampleCloserAndrea.uid,
-  assignedCloserName: sampleCloserAndrea.name,
-  createdAt: Timestamp.now(),
-  updatedAt: Timestamp.now(),
-  setterName: "Demo Setter",
-};
-// --- End Sample Data ---
-
 export default function InProcessLeads() {
   const { user } = useAuth();
   const [displayItems, setDisplayItems] = useState<InProcessDisplayItem[]>([]);
@@ -139,31 +112,7 @@ export default function InProcessLeads() {
         {isLoading && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden">
-        {displayItems.length === 0 && !isLoading ? (
-          // Display sample data if no real in-process leads
-          <ScrollArea className="h-[300px] md:h-[400px] pr-4">
-            <div className="space-y-4 p-4 border border-dashed border-muted-foreground rounded-md">
-              <p className="text-sm text-muted-foreground text-center mb-3">
-                <strong>Example:</strong> Andrea Rovayo assigned to "Tony the Tiger".
-              </p>
-              <div className="space-y-2">
-                <CloserCard
-                  closer={{...sampleCloserAndrea, avatarUrl: `https://placehold.co/100x100.png`}}
-                  assignedLeadName={sampleLeadAssignedToAndrea.customerName}
-                  allowInteractiveToggle={false}
-                />
-                <LeadCard lead={sampleLeadAssignedToAndrea} context="in-process" />
-              </div>
-              <p className="text-xs text-muted-foreground text-center mt-4">
-                <strong>In a real scenario:</strong>
-                <br />
-                - "Tony the Tiger" would disappear from the Lead Queue's "Waiting List".
-                <br />
-                - "Andrea Rovayo" would disappear from the "Closer Lineup".
-              </p>
-            </div>
-          </ScrollArea>
-        ) : displayItems.length > 0 ? (
+        {displayItems.length > 0 ? (
           <ScrollArea className="h-[300px] md:h-[400px] pr-4">
             <div className="space-y-4">
               {displayItems.map(({ lead, closer }) => (
@@ -180,11 +129,16 @@ export default function InProcessLeads() {
               ))}
             </div>
           </ScrollArea>
-        ) : (
+        ) : !isLoading ? (
            <div className="flex flex-col h-full items-center justify-center text-center">
             <Ghost className="h-12 w-12 text-muted-foreground mb-3" />
             <p className="text-lg font-medium text-muted-foreground">It's quiet... too quiet.</p>
             <p className="text-sm text-muted-foreground">No leads are currently in process.</p>
+          </div>
+        ) : (
+          // Still loading, show a loader or nothing until loading is false
+          <div className="flex h-full items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         )}
       </CardContent>
