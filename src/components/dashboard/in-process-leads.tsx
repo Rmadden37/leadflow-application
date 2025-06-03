@@ -2,21 +2,37 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { Lead } from "@/types";
+import type { Lead, Closer, UserRole } from "@/types";
 import { useAuth } from "@/hooks/use-auth";
 import { db } from "@/lib/firebase";
 import { collection, query, where, onSnapshot, orderBy, limit, Timestamp } from "firebase/firestore";
 import LeadCard from "./lead-card";
+import CloserCard from "./closer-card"; // Import CloserCard
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Activity, Loader2, Ghost, UserCircle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+interface InProcessDisplayItem {
+  lead: Lead;
+  closer?: Closer; // Closer assigned to this lead
+}
+
 export default function InProcessLeads() {
   const { user } = useAuth();
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [displayItems, setDisplayItems] = useState<InProcessDisplayItem[]>([]);
+  const [loadingLeads, setLoadingLeads] = useState(true);
+  const [loadingClosers, setLoadingClosers] = useState(true);
+  const [allTeamClosers, setAllTeamClosers] = useState<Closer[]>([]);
 
-  // Sample lead for demonstration when the actual list is empty
+  // Sample data for demonstration when actual list is empty
+  const sampleCloserAndrea: Closer = {
+    uid: "andrea-rovayo-uid",
+    name: "Andrea Rovayo",
+    status: "On Duty",
+    teamId: user?.teamId || "demo-team",
+    role: "closer",
+    avatarUrl: `https://ui-avatars.com/api/?name=Andrea+Rovayo&background=random&color=fff`, // Generic avatar
+  };
   const sampleLeadAssignedToAndrea: Lead = {
     id: "sample-lead-andrea-01",
     customerName: "Valued Customer Inc.",
@@ -25,29 +41,47 @@ export default function InProcessLeads() {
     status: "in_process",
     teamId: user?.teamId || "demo-team",
     dispatchType: "immediate",
-    assignedCloserId: "andrea-rovayo-uid", // Placeholder UID
-    assignedCloserName: "Andrea Rovayo",
+    assignedCloserId: sampleCloserAndrea.uid,
+    assignedCloserName: sampleCloserAndrea.name,
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
     setterName: "Demo Setter",
   };
 
-
+  // Fetch all closers for the team
   useEffect(() => {
-    console.log("[InProcessLeads] Hook triggered. User from useAuth:", user);
     if (!user || !user.teamId) {
-      console.log("[InProcessLeads] No user or no user.teamId. Skipping query. User:", user);
-      setLoading(false);
-      setLeads([]);
+      setLoadingClosers(false);
+      setAllTeamClosers([]);
       return;
     }
-    setLoading(true);
+    setLoadingClosers(true);
+    const closersQuery = query(
+      collection(db, "closers"),
+      where("teamId", "==", user.teamId)
+    );
+    const unsubscribeClosers = onSnapshot(closersQuery, (snapshot) => {
+      const closersData = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as Closer));
+      setAllTeamClosers(closersData);
+      setLoadingClosers(false);
+    }, (error) => {
+      console.error("[InProcessLeads] Error fetching team closers:", error);
+      setLoadingClosers(false);
+    });
+    return () => unsubscribeClosers();
+  }, [user]);
+
+  // Fetch in-process leads and combine with closer data
+  useEffect(() => {
+    if (!user || !user.teamId || loadingClosers) { // Wait for closers to load
+      if (!user || !user.teamId) setLoadingLeads(false);
+      // If closers are still loading, this effect will re-run once they are done.
+      return;
+    }
+    setLoadingLeads(true);
 
     let q;
-    console.log(`[InProcessLeads] User role: ${user.role}, teamId: ${user.teamId}, uid: ${user.uid}`);
-
     if (user.role === "closer") {
-      console.log("[InProcessLeads] Querying for closer's in-process leads.");
       q = query(
         collection(db, "leads"),
         where("teamId", "==", user.teamId),
@@ -57,7 +91,6 @@ export default function InProcessLeads() {
         limit(10)
       );
     } else if (user.role === "manager") {
-      console.log("[InProcessLeads] Querying for manager's view of in-process leads.");
       q = query(
         collection(db, "leads"),
         where("teamId", "==", user.teamId),
@@ -66,35 +99,33 @@ export default function InProcessLeads() {
         limit(20)
       );
     } else {
-      console.log("[InProcessLeads] User is a setter or unknown role. No in-process leads will be shown for this role.");
-      setLeads([]);
-      setLoading(false);
+      setDisplayItems([]);
+      setLoadingLeads(false);
       return;
     }
 
-    console.log("[InProcessLeads] Setting up snapshot listener for query:", q);
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      console.log(`[InProcessLeads] Snapshot received. Number of documents: ${querySnapshot.docs.length}`);
-      const leadsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lead));
-      console.log("[InProcessLeads] Mapped leadsData:", leadsData);
-      setLeads(leadsData);
-      setLoading(false);
+    const unsubscribeLeads = onSnapshot(q, (querySnapshot) => {
+      const newDisplayItems = querySnapshot.docs.map(doc => {
+        const lead = { id: doc.id, ...doc.data() } as Lead;
+        const assignedCloser = allTeamClosers.find(c => c.uid === lead.assignedCloserId);
+        return { lead, closer: assignedCloser };
+      });
+      setDisplayItems(newDisplayItems);
+      setLoadingLeads(false);
     }, (error) => {
       console.error("[InProcessLeads] Error fetching in-process leads:", error);
-      setLoading(false);
+      setLoadingLeads(false);
     });
 
-    return () => {
-      console.log("[InProcessLeads] Cleaning up snapshot listener.");
-      unsubscribe();
-    }
-  }, [user]);
+    return () => unsubscribeLeads();
+  }, [user, allTeamClosers, loadingClosers]); // Re-run if allTeamClosers or its loading state changes
 
   if (user?.role === 'setter') {
-    return null; // Setters don't typically see in-process leads list.
+    return null; 
   }
-
-  const shouldShowSampleLead = leads.length === 0 && !loading && (user?.role === "closer" || user?.role === "manager");
+  
+  const isLoading = loadingLeads || loadingClosers;
+  const shouldShowSampleData = displayItems.length === 0 && !isLoading && (user?.role === "closer" || user?.role === "manager");
 
   return (
     <Card className="h-full flex flex-col shadow-lg">
@@ -103,10 +134,10 @@ export default function InProcessLeads() {
           <Activity className="mr-2 h-7 w-7 text-primary" />
           In Process Leads
         </CardTitle>
-        {loading && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
+        {isLoading && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden">
-        {leads.length === 0 && !loading && !shouldShowSampleLead ? (
+        {displayItems.length === 0 && !isLoading && !shouldShowSampleData ? (
           <div className="flex h-full flex-col items-center justify-center text-center p-6">
             <Ghost
               className="h-32 w-32 text-muted-foreground opacity-10 mb-4"
@@ -118,18 +149,34 @@ export default function InProcessLeads() {
         ) : (
           <ScrollArea className="h-[300px] md:h-[400px] pr-4">
             <div className="space-y-4">
-              {leads.map(lead => (
-                <LeadCard key={lead.id} lead={lead} context="in-process" />
+              {displayItems.map(({ lead, closer }) => (
+                <div key={lead.id} className="space-y-2">
+                  {closer && (
+                    <CloserCard 
+                      closer={closer} 
+                      assignedLeadName={lead.customerName}
+                      allowInteractiveToggle={false} // Cannot change status while assigned
+                    />
+                  )}
+                  <LeadCard lead={lead} context="in-process" />
+                </div>
               ))}
-              {shouldShowSampleLead && (
+              {shouldShowSampleData && (
                 <div className="mt-4 p-4 border border-dashed border-primary/50 rounded-lg bg-primary/5">
                   <div className="flex items-center text-sm text-primary mb-3">
                     <UserCircle className="mr-2 h-5 w-5" />
-                    <p className="font-medium">Example View: Lead Assigned to Andrea Rovayo</p>
+                    <p className="font-medium">Example: Lead Assigned to Andrea Rovayo</p>
                   </div>
-                  <LeadCard lead={sampleLeadAssignedToAndrea} context="in-process" />
+                   <div className="space-y-2">
+                    <CloserCard 
+                        closer={sampleCloserAndrea} 
+                        assignedLeadName={sampleLeadAssignedToAndrea.customerName}
+                        allowInteractiveToggle={false}
+                    />
+                    <LeadCard lead={sampleLeadAssignedToAndrea} context="in-process" />
+                  </div>
                    <p className="text-xs text-muted-foreground mt-3 text-center">
-                    This is a sample card showing how a lead assigned to "Andrea Rovayo" would appear.
+                    This is a sample view. Actual assigned leads will appear here.
                   </p>
                 </div>
               )}

@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { Closer, UserRole } from "@/types";
+import type { Closer, UserRole, Lead } from "@/types";
 import { useAuth } from "@/hooks/use-auth";
 import { db } from "@/lib/firebase";
 import { collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
@@ -14,26 +14,59 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 export default function CloserLineup() {
   const { user } = useAuth();
   const [closers, setClosers] = useState<Closer[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingClosers, setLoadingClosers] = useState(true);
+  const [inProcessLeadIds, setInProcessLeadIds] = useState<Set<string>>(new Set());
+  const [loadingLeads, setLoadingLeads] = useState(true);
 
+  // Effect to fetch in-process leads to know which closers are busy
   useEffect(() => {
     if (!user || !user.teamId) {
-      setLoading(false);
+      setLoadingLeads(false);
+      setInProcessLeadIds(new Set());
+      return;
+    }
+    setLoadingLeads(true);
+    const leadsQuery = query(
+      collection(db, "leads"),
+      where("teamId", "==", user.teamId),
+      where("status", "==", "in_process")
+    );
+    const unsubscribeLeads = onSnapshot(leadsQuery, (querySnapshot) => {
+      const assignedCloserIds = new Set<string>();
+      querySnapshot.forEach(doc => {
+        const lead = doc.data() as Lead;
+        if (lead.assignedCloserId) {
+          assignedCloserIds.add(lead.assignedCloserId);
+        }
+      });
+      setInProcessLeadIds(assignedCloserIds);
+      setLoadingLeads(false);
+    }, (error) => {
+      console.error("[CloserLineup] Error fetching in-process leads:", error);
+      setLoadingLeads(false);
+    });
+    return () => unsubscribeLeads();
+  }, [user]);
+
+
+  // Effect to fetch and display closers
+  useEffect(() => {
+    if (!user || !user.teamId) {
+      setLoadingClosers(false);
       setClosers([]);
       return;
     }
 
-    setLoading(true);
+    setLoadingClosers(true);
 
-    // Fetch on-duty closers ordered by name initially. lineupOrder will be handled client-side.
     const q = query(
       collection(db, "closers"),
       where("teamId", "==", user.teamId),
       where("status", "==", "On Duty"),
-      orderBy("name", "asc") // Primary sort by name from DB
+      orderBy("name", "asc")
     );
 
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    const unsubscribeClosers = onSnapshot(q, (querySnapshot) => {
       let closersData = querySnapshot.docs.map(doc => {
         const data = doc.data();
         return {
@@ -44,58 +77,63 @@ export default function CloserLineup() {
           role: data.role as UserRole,
           avatarUrl: data.avatarUrl,
           phone: data.phone,
-          lineupOrder: data.lineupOrder, // This might be undefined
+          lineupOrder: data.lineupOrder,
         } as Closer;
       });
 
-      // Client-side defaulting of lineupOrder and then sort
+      // Filter out closers who are currently assigned to an in-process lead
+      closersData = closersData.filter(closer => !inProcessLeadIds.has(closer.uid));
+      
       closersData = closersData.map((closer, index) => ({
         ...closer,
-        // Assign a default lineupOrder if it's not a number
         lineupOrder: typeof closer.lineupOrder === 'number' ? closer.lineupOrder : (index + 1) * 100000,
       }));
 
       closersData.sort((a, b) => {
-        const orderA = a.lineupOrder!; // Should be a number after defaulting
+        const orderA = a.lineupOrder!; 
         const orderB = b.lineupOrder!;
         if (orderA !== orderB) {
           return orderA - orderB;
         }
-        return a.name.localeCompare(b.name); // Fallback to name if orders are identical
+        return a.name.localeCompare(b.name);
       });
       
       setClosers(closersData);
-      setLoading(false);
+      setLoadingClosers(false);
     }, (error) => {
       console.error("[CloserLineup] Error fetching closer lineup:", error);
-      setLoading(false);
+      setLoadingClosers(false);
     });
 
-    return () => {
-      unsubscribe();
-    }
-  }, [user]);
+    return () => unsubscribeClosers();
+  }, [user, inProcessLeadIds]); // Re-run if inProcessLeadIds changes
+
+  const isLoading = loadingClosers || loadingLeads;
 
   return (
     <Card className="h-full flex flex-col shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-2xl font-bold font-headline flex items-center justify-center w-full"> {/* Updated class */}
-          <Users className="mr-2 h-6 w-6 text-primary" /> {/* Adjusted icon size */}
+        <CardTitle className="text-2xl font-bold font-headline flex items-center justify-center w-full">
+          <Users className="mr-2 h-6 w-6 text-primary" />
           Closer Lineup
         </CardTitle>
-        {loading && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
+        {isLoading && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden">
-        {closers.length === 0 && !loading ? (
+        {closers.length === 0 && !isLoading ? (
           <div className="flex h-full items-center justify-center">
-            <p className="text-muted-foreground">No closers currently on duty.</p>
+            <p className="text-muted-foreground">No available closers on duty.</p>
             {user && !user.teamId && <p className="text-xs text-destructive-foreground">Logged-in user is missing a teamId.</p>}
           </div>
         ) : (
            <ScrollArea className="h-[300px] md:h-[400px] pr-4">
             <div className="space-y-3">
               {closers.map(closer => (
-                <CloserCard key={closer.uid} closer={closer} allowInteractiveToggle={false} />
+                <CloserCard 
+                  key={closer.uid} 
+                  closer={closer} 
+                  allowInteractiveToggle={false} // Status is handled by ManageClosersModal or AvailabilityToggle
+                />
               ))}
             </div>
           </ScrollArea>
