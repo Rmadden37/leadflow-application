@@ -8,7 +8,7 @@ import { db } from "@/lib/firebase";
 import { collection, query, where, onSnapshot, orderBy, limit } from "firebase/firestore";
 import LeadCard from "./lead-card";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { Activity, Loader2 } from "lucide-react";
+import { Activity, Loader2, Wind } from "lucide-react"; // Added Wind
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function InProcessLeads() {
@@ -88,8 +88,12 @@ export default function InProcessLeads() {
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden">
         {leads.length === 0 && !loading ? (
-          <div className="flex h-full items-center justify-center">
-            <p className="text-muted-foreground">No leads currently in process.</p>
+          <div className="flex h-full flex-col items-center justify-center text-center p-6">
+            <Wind 
+              className="h-32 w-32 text-muted-foreground opacity-10 mb-4" 
+              data-ai-hint="tumbleweed desert" 
+            />
+            <p className="text-muted-foreground text-lg">it's quiet.. too quiet..</p>
           </div>
         ) : (
           <ScrollArea className="h-[300px] md:h-[400px] pr-4">
