@@ -18,12 +18,12 @@ export default function DashboardHeader() {
         <Link href="/dashboard" className="mr-6 flex items-center">
           <Image
             src="https://placehold.co/160x40.png"
-            alt="Dynasty Logo"
+            alt="LeadFlow Logo" 
             width={160}
             height={40}
-            className="h-10 object-contain" // Adjust height as needed, object-contain preserves aspect ratio
-            data-ai-hint="dynasty logo"
-            priority // Good to add for LCP elements like a logo
+            className="h-10 object-contain" 
+            data-ai-hint="company logo"
+            priority 
           />
         </Link>
         <div className="flex flex-1 items-center justify-end space-x-4">
