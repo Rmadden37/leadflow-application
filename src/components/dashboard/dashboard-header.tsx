@@ -15,7 +15,7 @@ export default function DashboardHeader() {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 max-w-screen-2xl items-center">
         <Link href="/dashboard" className="mr-6 flex items-center space-x-2 text-primary">
-          <ClipboardList className="h-10 w-10 border border-border rounded-sm p-0.5" />
+          <ClipboardList className="h-10 w-10" />
           <span className="text-2xl font-bold font-headline">LeadFlow</span>
         </Link>
         <div className="flex flex-1 items-center justify-end space-x-4">

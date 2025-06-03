@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { Closer } from "@/types"; // Using the updated Closer type
+import type { Closer } from "@/types"; 
 import { useAuth } from "@/hooks/use-auth";
 import { db } from "@/lib/firebase";
 import { collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
@@ -12,7 +12,7 @@ import { UserX, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function OffDutyClosers() {
-  const { user } = useAuth(); // user.teamId is from the logged-in user (AppUser)
+  const { user } = useAuth(); 
   const [closers, setClosers] = useState<Closer[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -24,19 +24,18 @@ export default function OffDutyClosers() {
     }
     setLoading(true);
     
-    // Query the 'closers' collection directly
     const q = query(
-      collection(db, "closers"), // Changed from "users" to "closers"
+      collection(db, "closers"), 
       where("teamId", "==", user.teamId),
       where("status", "==", "Off Duty"), 
-      orderBy("name", "asc") // Assuming 'name' is the field for display name
+      orderBy("name", "asc") 
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const closersData = querySnapshot.docs.map(doc => {
         const data = doc.data();
         return {
-          uid: doc.id, // The document ID from 'closers' collection
+          uid: doc.id, 
           name: data.name,
           status: data.status as "On Duty" | "Off Duty",
           teamId: data.teamId,
@@ -63,7 +62,7 @@ export default function OffDutyClosers() {
     <Card className="h-full flex flex-col shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-lg font-medium font-headline flex items-center">
-          <UserX className="mr-2 h-6 w-6 text-muted-foreground border border-border rounded-sm p-0.5" />
+          <UserX className="mr-2 h-6 w-6 text-muted-foreground" />
           Off Duty Closers
         </CardTitle>
          {loading && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}

@@ -28,7 +28,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <div className="mb-8 flex items-center space-x-2 text-primary">
-        <Sun className="h-12 w-12 border border-border rounded-md p-1" />
+        <Sun className="h-12 w-12" />
         <h1 className="text-4xl font-bold font-headline">LeadFlow</h1>
       </div>
       <LoginForm />

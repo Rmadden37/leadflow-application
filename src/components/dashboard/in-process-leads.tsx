@@ -67,7 +67,7 @@ export default function InProcessLeads() {
     <Card className="h-full flex flex-col shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-lg font-medium font-headline flex items-center">
-          <Activity className="mr-2 h-6 w-6 text-primary border border-border rounded-sm p-0.5" />
+          <Activity className="mr-2 h-6 w-6 text-primary" />
           In Process Leads
         </CardTitle>
         {loading && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
