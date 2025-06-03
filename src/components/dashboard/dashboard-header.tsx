@@ -15,6 +15,12 @@ export default function DashboardHeader() {
   const { user, logout } = useAuth();
   const [isCreateLeadModalOpen, setIsCreateLeadModalOpen] = useState(false);
 
+  const getAvatarFallbackText = () => {
+    if (user?.displayName) return user.displayName.substring(0, 2).toUpperCase();
+    if (user?.email) return user.email.substring(0, 2).toUpperCase();
+    return <UserCircle size={24}/>;
+  }
+
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -36,9 +42,9 @@ export default function DashboardHeader() {
             {user?.role === "closer" && <AvailabilityToggle />}
             <Link href="/dashboard/profile" className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity">
               <Avatar className="h-10 w-10 border border-border">
-                <AvatarImage src={user?.displayName ? `https://ui-avatars.com/api/?name=${user.displayName.replace(/\s+/g, '+')}&background=random` : undefined} />
+                <AvatarImage src={user?.avatarUrl || undefined} alt={user?.displayName || user?.email || "User"} />
                 <AvatarFallback>
-                  {user?.email ? user.email.substring(0, 2).toUpperCase() : <UserCircle size={24}/>}
+                  {getAvatarFallbackText()}
                 </AvatarFallback>
               </Avatar>
               <div className="hidden sm:flex flex-col text-xs">
