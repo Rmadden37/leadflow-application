@@ -163,8 +163,8 @@ export default function LeadQueue() {
   return (
     <Card className="h-full flex flex-col shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-lg font-medium font-headline flex items-center justify-center w-full">
-          <ListChecks className="mr-2 h-6 w-6 text-primary" />
+        <CardTitle className="text-2xl font-bold font-headline flex items-center justify-center w-full"> {/* Updated class */}
+          <ListChecks className="mr-2 h-7 w-7 text-primary" /> {/* Adjusted icon size */}
           Lead Queues
         </CardTitle>
         {(loadingWaiting || loadingScheduled) && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}

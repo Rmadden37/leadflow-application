@@ -76,8 +76,8 @@ export default function AllLeadsPage() {
     <div className="container mx-auto py-8">
       <Card className="shadow-xl">
         <CardHeader>
-          <CardTitle className="text-2xl font-headline flex items-center justify-center">
-            <History className="mr-3 h-7 w-7 text-primary" />
+          <CardTitle className="text-3xl font-bold font-headline flex items-center justify-center">
+            <History className="mr-3 h-8 w-8 text-primary" /> {/* Adjusted icon size for larger title */}
             All Submitted Leads
           </CardTitle>
         </CardHeader>

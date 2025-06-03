@@ -124,8 +124,8 @@ export default function ProfilePage() {
     <div className="container mx-auto py-8 max-w-2xl space-y-6">
       <Card className="shadow-xl">
         <CardHeader>
-          <CardTitle className="text-2xl font-headline flex items-center justify-center">
-            <User className="mr-3 h-7 w-7 text-primary" />
+          <CardTitle className="text-3xl font-bold font-headline flex items-center justify-center">
+            <User className="mr-3 h-8 w-8 text-primary" /> {/* Adjusted icon size */}
             User Profile
           </CardTitle>
           <CardDescription className="text-center">Manage your personal information and account settings.</CardDescription>
@@ -171,8 +171,8 @@ export default function ProfilePage() {
         </CardContent>
         <CardFooter className="flex-col items-start space-y-4 border-t pt-6 mt-6">
             <div className="w-full">
-                <h3 className="text-lg font-medium font-headline flex items-center justify-center">
-                    <KeyRound className="mr-2 h-5 w-5 text-primary"/>
+                <h3 className="text-xl font-bold font-headline flex items-center justify-center"> {/* Adjusted size and weight */}
+                    <KeyRound className="mr-2 h-6 w-6 text-primary"/> {/* Adjusted icon size */}
                     Password Reset
                 </h3>
                 <p className="text-sm text-muted-foreground mt-1 text-center">
@@ -192,8 +192,8 @@ export default function ProfilePage() {
       {user.role === 'manager' && (
         <Card className="shadow-xl">
           <CardHeader>
-            <CardTitle className="text-xl font-headline flex items-center justify-center">
-                <Briefcase className="mr-3 h-6 w-6 text-primary" />
+            <CardTitle className="text-2xl font-bold font-headline flex items-center justify-center"> {/* Adjusted size */}
+                <Briefcase className="mr-3 h-7 w-7 text-primary" /> {/* Adjusted icon size */}
                 Manager Tools
             </CardTitle>
             <CardDescription className="text-center">Access manager-specific functionalities.</CardDescription>
