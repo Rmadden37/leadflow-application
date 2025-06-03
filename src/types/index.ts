@@ -55,4 +55,6 @@ export interface Closer {
   role?: UserRole; // Role is also in the 'closers' collection as per screenshot
   avatarUrl?: string;
   phone?: string;
+  lineupOrder?: number; // Field for managing closer lineup order
 }
+

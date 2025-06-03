@@ -4,9 +4,10 @@
 import type { Closer } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UserCheck, UserX, Loader2 } from "lucide-react";
+import { UserCheck, UserX, Loader2, ChevronUp, ChevronDown } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { db } from "@/lib/firebase";
 import { doc, updateDoc } from "firebase/firestore";
@@ -15,20 +16,33 @@ import { useState } from "react";
 
 interface CloserCardProps {
   closer: Closer;
-  allowInteractiveToggle?: boolean; // New prop
+  allowInteractiveToggle?: boolean;
+  onMove?: (direction: 'up' | 'down') => void;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
+  showMoveControls?: boolean;
+  isUpdatingOrder?: boolean;
 }
 
-export default function CloserCard({ closer, allowInteractiveToggle = true }: CloserCardProps) {
-  const { user } = useAuth(); 
+export default function CloserCard({
+  closer,
+  allowInteractiveToggle = true,
+  onMove,
+  canMoveUp,
+  canMoveDown,
+  showMoveControls,
+  isUpdatingOrder
+}: CloserCardProps) {
+  const { user } = useAuth();
   const { toast } = useToast();
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   const canUserManagerOrSelfToggle = user && (user.role === 'manager' || (user.role === 'closer' && user.uid === closer.uid));
-  const showInteractiveToggle = canUserManagerOrSelfToggle && allowInteractiveToggle;
+  const showInteractiveSwitch = canUserManagerOrSelfToggle && allowInteractiveToggle;
 
   const handleToggleCloserAvailability = async (checked: boolean) => {
-    if (!user || !canUserManagerOrSelfToggle) return; 
-    
+    if (!user || !canUserManagerOrSelfToggle) return;
+
     setIsUpdatingStatus(true);
     const newStatus = checked ? "On Duty" : "Off Duty";
 
@@ -65,13 +79,13 @@ export default function CloserCard({ closer, allowInteractiveToggle = true }: Cl
           </Avatar>
           <div className="flex-1">
             <p className="text-sm font-medium font-headline">{closer.name || "Unnamed Closer"}</p>
-            {showInteractiveToggle ? (
+            {showInteractiveSwitch ? (
               <div className="flex items-center space-x-2 mt-1">
                 <Switch
                   id={`status-toggle-${closer.uid}`}
                   checked={currentStatusIsOnDuty}
                   onCheckedChange={handleToggleCloserAvailability}
-                  disabled={isUpdatingStatus}
+                  disabled={isUpdatingStatus || isUpdatingOrder}
                   aria-label={currentStatusIsOnDuty ? `Set ${closer.name || 'Closer'} to Off Duty` : `Set ${closer.name || 'Closer'} to On Duty`}
                 />
                 <Label
@@ -79,8 +93,8 @@ export default function CloserCard({ closer, allowInteractiveToggle = true }: Cl
                   className={`text-xs font-medium ${currentStatusIsOnDuty ? 'text-accent' : 'text-destructive'}`}
                 >
                   {isUpdatingStatus ? (
-                    <Loader2 className="h-3 w-3 animate-spin" /> 
-                  ): (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
                     currentStatusIsOnDuty ? "On Duty" : "Off Duty"
                   )}
                 </Label>
@@ -96,6 +110,16 @@ export default function CloserCard({ closer, allowInteractiveToggle = true }: Cl
               </div>
             )}
           </div>
+          {showMoveControls && onMove && (
+            <div className="flex flex-col space-y-1 ml-auto">
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove('up')} disabled={!canMoveUp || isUpdatingStatus || isUpdatingOrder}>
+                <ChevronUp className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove('down')} disabled={!canMoveDown || isUpdatingStatus || isUpdatingOrder}>
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

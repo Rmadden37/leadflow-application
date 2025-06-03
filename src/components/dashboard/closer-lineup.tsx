@@ -12,37 +12,39 @@ import { Users, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function CloserLineup() {
-  const { user } = useAuth(); 
+  const { user } = useAuth();
   const [closers, setClosers] = useState<Closer[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user || !user.teamId) {
       setLoading(false);
-      setClosers([]); 
+      setClosers([]);
       return;
     }
 
     setLoading(true);
-    
+
     const q = query(
       collection(db, "closers"),
       where("teamId", "==", user.teamId),
-      where("status", "==", "On Duty"), 
-      orderBy("name", "asc") 
+      where("status", "==", "On Duty"),
+      orderBy("lineupOrder", "asc"), // Primary sort by custom order
+      orderBy("name", "asc")         // Secondary sort by name
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const closersData = querySnapshot.docs.map(doc => {
         const data = doc.data();
         return {
-          uid: doc.id, 
+          uid: doc.id,
           name: data.name,
           status: data.status as "On Duty" | "Off Duty",
           teamId: data.teamId,
-          role: data.role as UserRole, 
+          role: data.role as UserRole,
           avatarUrl: data.avatarUrl,
           phone: data.phone,
+          lineupOrder: data.lineupOrder, // Include lineupOrder
         } as Closer;
       });
       setClosers(closersData);
@@ -85,4 +87,3 @@ export default function CloserLineup() {
     </Card>
   );
 }
-
