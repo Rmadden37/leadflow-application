@@ -8,7 +8,7 @@ import { db } from "@/lib/firebase";
 import { collection, query, where, onSnapshot, orderBy, limit } from "firebase/firestore";
 import LeadCard from "./lead-card";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { Activity, Loader2, Wind } from "lucide-react"; // Added Wind
+import { Activity, Loader2, Ghost } from "lucide-react"; // Changed Wind to Ghost
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function InProcessLeads() {
@@ -89,9 +89,9 @@ export default function InProcessLeads() {
       <CardContent className="flex-grow overflow-hidden">
         {leads.length === 0 && !loading ? (
           <div className="flex h-full flex-col items-center justify-center text-center p-6">
-            <Wind 
+            <Ghost 
               className="h-32 w-32 text-muted-foreground opacity-10 mb-4" 
-              data-ai-hint="tumbleweed desert" 
+              data-ai-hint="ghost town" 
             />
             <p className="text-muted-foreground text-lg">it's quiet.. too quiet..</p>
           </div>
