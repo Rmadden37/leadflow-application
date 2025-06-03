@@ -66,11 +66,9 @@ export default function CloserLineup() {
       return;
     }
 
-    // IMPORTANT: Only proceed if the list of assigned closer UIDs is ready.
-    // If still loading assigned IDs, clear the lineup to prevent showing stale data.
     if (isLoadingAssignedCloserIds) {
       setClosersInLineup([]); 
-      setIsLoadingClosersForLineup(true); // The lineup itself is still considered loading
+      setIsLoadingClosersForLineup(true);
       return;
     }
 
@@ -99,28 +97,30 @@ export default function CloserLineup() {
           } as Closer;
         });
 
-        // Filter out closers who are currently assigned to an "in_process" lead.
+        // DEMO: Always hide Andrea Rovayo from lineup for demonstration
+        allOnDutyClosers = allOnDutyClosers.filter(
+          (closer) => closer.uid !== "tdItEd0KOLa4qWk4HV4AaCucZz82"
+        );
+
         const availableClosers = allOnDutyClosers.filter(
           (closer) => !inProcessLeadAssignedCloserIds.has(closer.uid)
         );
         
-        // Sort the remaining available closers by lineupOrder, then by name as a fallback.
         const sortedAvailableClosers = availableClosers
           .map((closer, index) => ({
             ...closer,
-            // Ensure lineupOrder is a number for sorting, defaulting if necessary.
             lineupOrder:
               typeof closer.lineupOrder === "number"
                 ? closer.lineupOrder
-                : (index + 1) * 100000, // Default based on current index if not set
+                : (index + 1) * 100000, 
           }))
           .sort((a, b) => {
-            const orderA = a.lineupOrder!; // Non-null assertion due to defaulting
+            const orderA = a.lineupOrder!;
             const orderB = b.lineupOrder!;
             if (orderA !== orderB) {
               return orderA - orderB;
             }
-            return a.name.localeCompare(b.name); // Fallback sort by name
+            return a.name.localeCompare(b.name);
           });
 
         setClosersInLineup(sortedAvailableClosers);
@@ -134,7 +134,7 @@ export default function CloserLineup() {
     );
 
     return () => unsubscribeClosers();
-  }, [user?.teamId, inProcessLeadAssignedCloserIds, isLoadingAssignedCloserIds]); // Key dependencies
+  }, [user?.teamId, inProcessLeadAssignedCloserIds, isLoadingAssignedCloserIds]);
 
   const isOverallLoading = isLoadingAssignedCloserIds || isLoadingClosersForLineup;
 
@@ -160,7 +160,7 @@ export default function CloserLineup() {
                 <CloserCard 
                   key={closer.uid} 
                   closer={closer} 
-                  allowInteractiveToggle={false} // In lineup, toggle is not interactive here, managed by status
+                  allowInteractiveToggle={false}
                 />
               ))}
             </div>

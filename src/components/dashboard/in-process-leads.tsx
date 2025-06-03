@@ -15,8 +15,37 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface InProcessDisplayItem {
   lead: Lead;
-  closer?: Closer; // Closer assigned to this lead
+  closer?: Closer;
 }
+
+// --- DEMO DATA ---
+const DEMO_ANDREA_ROVAYO: Closer = {
+  uid: "tdItEd0KOLa4qWk4HV4AaCucZz82",
+  name: "Andrea Rovayo",
+  status: "On Duty", // Status for card display, actual status could be different in DB
+  teamId: "Empire", // Assuming a common teamId for demo
+  role: "closer",
+  avatarUrl: "https://imgur.com/fzF41qW.jpeg",
+  phone: "(786) 973-4134",
+  lineupOrder: 1, // Not directly relevant for this display
+};
+
+const DEMO_TONY_THE_TIGER_LEAD: Lead = {
+  id: "demo-lead-tony",
+  customerName: "Tony the Tiger",
+  customerPhone: "(555) GRR-EAT",
+  address: "Kellogg's HQ, Battle Creek, MI",
+  status: "in_process",
+  teamId: "Empire", // Assuming a common teamId for demo
+  dispatchType: "immediate",
+  assignedCloserId: "tdItEd0KOLa4qWk4HV4AaCucZz82",
+  assignedCloserName: "Andrea Rovayo",
+  createdAt: Timestamp.now(),
+  updatedAt: Timestamp.now(),
+  dispositionNotes: "He said they're GRRREAT!",
+  photoUrls: [],
+};
+// --- END DEMO DATA ---
 
 export default function InProcessLeads() {
   const { user } = useAuth();
@@ -25,7 +54,6 @@ export default function InProcessLeads() {
   const [loadingClosers, setLoadingClosers] = useState(true);
   const [allTeamClosers, setAllTeamClosers] = useState<Closer[]>([]);
 
-  // Fetch all closers for the team
   useEffect(() => {
     if (!user || !user.teamId) {
       setLoadingClosers(false);
@@ -48,12 +76,9 @@ export default function InProcessLeads() {
     return () => unsubscribeClosers();
   }, [user]);
 
-  // Fetch in-process leads and combine with closer data
   useEffect(() => {
     if (!user || !user.teamId || loadingClosers) {
       if (!user || !user.teamId) setLoadingLeads(false);
-      // If still loading closers, don't proceed to fetch leads yet as we need closer info.
-      // Set displayItems to empty to avoid showing stale data.
       if (loadingClosers) setDisplayItems([]);
       return;
     }
@@ -78,7 +103,6 @@ export default function InProcessLeads() {
         limit(20)
       );
     } else {
-      // Setters don't see this component, or if role is unexpected
       setDisplayItems([]);
       setLoadingLeads(false);
       return;
@@ -94,7 +118,7 @@ export default function InProcessLeads() {
       setLoadingLeads(false);
     }, (error) => {
       console.error("[InProcessLeads] Error fetching in-process leads:", error);
-      setDisplayItems([]); // Clear on error
+      setDisplayItems([]);
       setLoadingLeads(false);
     });
 
@@ -106,6 +130,26 @@ export default function InProcessLeads() {
   }
 
   const isLoading = loadingLeads || loadingClosers;
+
+  const renderDemoContent = () => (
+    <div className="space-y-4">
+      <Alert variant="default" className="mt-2">
+        <Info className="h-4 w-4" />
+        <AlertTitle className="font-semibold">Demonstration Mode</AlertTitle>
+        <AlertDescription className="text-xs">
+          This is a visual demonstration. Andrea Rovayo is shown working on "Tony the Tiger".
+          In a real scenario, this would reflect actual data from Firestore, Andrea would be removed from the "Closer Lineup",
+          and "Tony the Tiger" would be removed from the "Lead Queue".
+        </AlertDescription>
+      </Alert>
+      <CloserCard
+        closer={DEMO_ANDREA_ROVAYO}
+        assignedLeadName={DEMO_TONY_THE_TIGER_LEAD.customerName}
+        allowInteractiveToggle={false}
+      />
+      <LeadCard lead={DEMO_TONY_THE_TIGER_LEAD} context="in-process" />
+    </div>
+  );
 
   return (
     <Card className="h-full flex flex-col shadow-lg">
@@ -130,7 +174,7 @@ export default function InProcessLeads() {
                     <CloserCard
                       closer={closer}
                       assignedLeadName={lead.customerName}
-                      allowInteractiveToggle={false} // Status managed by assignment, not direct toggle here
+                      allowInteractiveToggle={false}
                     />
                   )}
                   <LeadCard lead={lead} context="in-process" />
@@ -139,11 +183,8 @@ export default function InProcessLeads() {
             </div>
           </ScrollArea>
         ) : (
-           <div className="flex flex-col h-full items-center justify-center text-center">
-            <Ghost className="h-12 w-12 text-muted-foreground mb-3" />
-            <p className="text-lg font-medium text-muted-foreground">It's quiet... too quiet.</p>
-            <p className="text-sm text-muted-foreground">No leads are currently in process.</p>
-          </div>
+          // Show demo content if no real "in_process" leads and not loading
+          renderDemoContent()
         )}
       </CardContent>
     </Card>
