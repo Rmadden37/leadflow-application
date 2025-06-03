@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -47,10 +48,10 @@ export default function LeadQueue() {
     <Card className="h-full flex flex-col shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-lg font-medium font-headline flex items-center">
-          <ListChecks className="mr-2 h-5 w-5 text-primary" />
+          <ListChecks className="mr-2 h-6 w-6 text-primary border border-border rounded-sm p-0.5" />
           Lead Queue
         </CardTitle>
-        {loading && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
+        {loading && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden">
         {leads.length === 0 && !loading ? (

@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Lead, LeadStatus } from "@/types";
@@ -108,7 +109,7 @@ export default function LeadDispositionModal({ lead, isOpen, onClose }: LeadDisp
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isLoading || !selectedStatus}>
-            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Save Disposition"}
+            {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Save Disposition"}
           </Button>
         </DialogFooter>
       </DialogContent>

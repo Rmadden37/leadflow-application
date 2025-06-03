@@ -37,21 +37,21 @@ interface LeadCardProps {
 const getStatusIcon = (status: Lead["status"]) => {
   switch (status) {
     case "in_process":
-      return <Activity className="h-4 w-4 text-blue-500" />;
+      return <Activity className="h-5 w-5 text-blue-500" />;
     case "sold":
-      return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+      return <CheckCircle2 className="h-5 w-5 text-green-500" />;
     case "no_sale":
-      return <XCircle className="h-4 w-4 text-red-500" />;
+      return <XCircle className="h-5 w-5 text-red-500" />;
     case "canceled":
-      return <Ban className="h-4 w-4 text-yellow-500" />;
+      return <Ban className="h-5 w-5 text-yellow-500" />;
     case "rescheduled":
-      return <CalendarClock className="h-4 w-4 text-purple-500" />;
+      return <CalendarClock className="h-5 w-5 text-purple-500" />;
     case "credit_fail":
-      return <CreditCard className="h-4 w-4 text-orange-500" />; // Corrected from CreditCardOff
+      return <CreditCard className="h-5 w-5 text-orange-500" />; // Corrected from CreditCardOff
     case "waiting_assignment":
-      return <ClipboardList className="h-4 w-4 text-gray-500" />;
+      return <ClipboardList className="h-5 w-5 text-gray-500" />;
     default:
-      return <Activity className="h-4 w-4 text-gray-500" />;
+      return <Activity className="h-5 w-5 text-gray-500" />;
   }
 };
 
@@ -96,12 +96,12 @@ export default function LeadCard({ lead, context = "in-process" }: LeadCardProps
         </CardHeader>
         <CardContent className="text-sm space-y-1 pb-3 px-4">
           <div className="flex items-center text-muted-foreground">
-            <Phone className="mr-2 h-3.5 w-3.5" />
+            <Phone className="mr-2 h-4 w-4" />
             <span>{lead.customerPhone}</span>
           </div>
           {context === "in-process" && lead.assignedCloserName && (
             <div className="flex items-center text-muted-foreground">
-              <User className="mr-2 h-3.5 w-3.5" />
+              <User className="mr-2 h-4 w-4" />
               <span>Assigned to: {lead.assignedCloserName}</span>
             </div>
           )}

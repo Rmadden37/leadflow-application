@@ -25,9 +25,9 @@ export default function CloserCard({ closer }: CloserCardProps) {
             <p className="text-sm font-medium font-headline">{closer.name}</p>
             <div className={`flex items-center text-xs ${isOnDuty ? "text-green-600" : "text-red-600"}`}>
               {isOnDuty ? (
-                <UserCheck className="mr-1 h-3.5 w-3.5" />
+                <UserCheck className="mr-1 h-4 w-4" />
               ) : (
-                <UserX className="mr-1 h-3.5 w-3.5" />
+                <UserX className="mr-1 h-4 w-4" />
               )}
               {closer.status} {/* This will now display "On Duty" or "Off Duty" directly */}
             </div>
@@ -37,4 +37,3 @@ export default function CloserCard({ closer }: CloserCardProps) {
     </Card>
   );
 }
-
