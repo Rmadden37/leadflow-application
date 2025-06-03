@@ -5,16 +5,33 @@ import { useState, useEffect } from "react";
 import type { Lead } from "@/types";
 import { useAuth } from "@/hooks/use-auth";
 import { db } from "@/lib/firebase";
-import { collection, query, where, onSnapshot, orderBy, limit } from "firebase/firestore";
+import { collection, query, where, onSnapshot, orderBy, limit, Timestamp } from "firebase/firestore";
 import LeadCard from "./lead-card";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { Activity, Loader2, Ghost } from "lucide-react"; // Changed Wind to Ghost
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Activity, Loader2, Ghost, UserCircle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function InProcessLeads() {
   const { user } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Sample lead for demonstration when the actual list is empty
+  const sampleLeadAssignedToAndrea: Lead = {
+    id: "sample-lead-andrea-01",
+    customerName: "Valued Customer Inc.",
+    customerPhone: "(555) 123-DEMO",
+    address: "789 Demo Drive, Sampletown",
+    status: "in_process",
+    teamId: user?.teamId || "demo-team",
+    dispatchType: "immediate",
+    assignedCloserId: "andrea-rovayo-uid", // Placeholder UID
+    assignedCloserName: "Andrea Rovayo",
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+    setterName: "Demo Setter",
+  };
+
 
   useEffect(() => {
     console.log("[InProcessLeads] Hook triggered. User from useAuth:", user);
@@ -48,7 +65,7 @@ export default function InProcessLeads() {
         orderBy("updatedAt", "desc"),
         limit(20)
       );
-    } else { 
+    } else {
       console.log("[InProcessLeads] User is a setter or unknown role. No in-process leads will be shown for this role.");
       setLeads([]);
       setLoading(false);
@@ -77,30 +94,45 @@ export default function InProcessLeads() {
     return null; // Setters don't typically see in-process leads list.
   }
 
+  const shouldShowSampleLead = leads.length === 0 && !loading && (user?.role === "closer" || user?.role === "manager");
+
   return (
     <Card className="h-full flex flex-col shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-2xl font-bold font-headline flex items-center justify-center w-full"> {/* Updated class */}
-          <Activity className="mr-2 h-7 w-7 text-primary" /> {/* Adjusted icon size */}
+        <CardTitle className="text-2xl font-bold font-headline flex items-center justify-center w-full">
+          <Activity className="mr-2 h-7 w-7 text-primary" />
           In Process Leads
         </CardTitle>
         {loading && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden">
-        {leads.length === 0 && !loading ? (
+        {leads.length === 0 && !loading && !shouldShowSampleLead ? (
           <div className="flex h-full flex-col items-center justify-center text-center p-6">
-            <Ghost 
-              className="h-32 w-32 text-muted-foreground opacity-10 mb-4" 
-              data-ai-hint="ghost town" 
+            <Ghost
+              className="h-32 w-32 text-muted-foreground opacity-10 mb-4"
+              data-ai-hint="ghost town"
             />
-            <p className="text-muted-foreground text-lg">it's quiet.. too quiet..</p>
+            <p className="text-muted-foreground text-lg">It's quiet... too quiet...</p>
+            <p className="text-xs text-muted-foreground mt-1">No leads are currently in process.</p>
           </div>
         ) : (
           <ScrollArea className="h-[300px] md:h-[400px] pr-4">
             <div className="space-y-4">
               {leads.map(lead => (
-                <LeadCard key={lead.id} lead={lead} />
+                <LeadCard key={lead.id} lead={lead} context="in-process" />
               ))}
+              {shouldShowSampleLead && (
+                <div className="mt-4 p-4 border border-dashed border-primary/50 rounded-lg bg-primary/5">
+                  <div className="flex items-center text-sm text-primary mb-3">
+                    <UserCircle className="mr-2 h-5 w-5" />
+                    <p className="font-medium">Example View: Lead Assigned to Andrea Rovayo</p>
+                  </div>
+                  <LeadCard lead={sampleLeadAssignedToAndrea} context="in-process" />
+                   <p className="text-xs text-muted-foreground mt-3 text-center">
+                    This is a sample card showing how a lead assigned to "Andrea Rovayo" would appear.
+                  </p>
+                </div>
+              )}
             </div>
           </ScrollArea>
         )}
