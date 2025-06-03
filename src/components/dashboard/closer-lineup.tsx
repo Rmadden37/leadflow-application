@@ -15,14 +15,14 @@ export default function CloserLineup() {
   const { user } = useAuth();
   const [closers, setClosers] = useState<Closer[]>([]);
   const [loadingClosers, setLoadingClosers] = useState(true);
-  const [inProcessLeadIds, setInProcessLeadIds] = useState<Set<string>>(new Set());
+  const [inProcessLeadAssignedCloserIds, setInProcessLeadAssignedCloserIds] = useState<Set<string>>(new Set());
   const [loadingLeads, setLoadingLeads] = useState(true);
 
-  // Effect to fetch in-process leads to know which closers are busy
+  // Effect to fetch IDs of closers assigned to in-process leads
   useEffect(() => {
     if (!user || !user.teamId) {
       setLoadingLeads(false);
-      setInProcessLeadIds(new Set());
+      setInProcessLeadAssignedCloserIds(new Set());
       return;
     }
     setLoadingLeads(true);
@@ -39,17 +39,17 @@ export default function CloserLineup() {
           assignedCloserIds.add(lead.assignedCloserId);
         }
       });
-      setInProcessLeadIds(assignedCloserIds);
+      setInProcessLeadAssignedCloserIds(assignedCloserIds);
       setLoadingLeads(false);
     }, (error) => {
-      console.error("[CloserLineup] Error fetching in-process leads:", error);
+      console.error("[CloserLineup] Error fetching in-process leads' assigned closers:", error);
       setLoadingLeads(false);
     });
     return () => unsubscribeLeads();
   }, [user]);
 
 
-  // Effect to fetch and display closers
+  // Effect to fetch and display "On Duty" closers, filtered by those not in inProcessLeadAssignedCloserIds
   useEffect(() => {
     if (!user || !user.teamId) {
       setLoadingClosers(false);
@@ -62,8 +62,8 @@ export default function CloserLineup() {
     const q = query(
       collection(db, "closers"),
       where("teamId", "==", user.teamId),
-      where("status", "==", "On Duty"),
-      orderBy("name", "asc")
+      where("status", "==", "On Duty"), // Only "On Duty" closers
+      orderBy("name", "asc") // Initial sort by name
     );
 
     const unsubscribeClosers = onSnapshot(q, (querySnapshot) => {
@@ -82,8 +82,9 @@ export default function CloserLineup() {
       });
 
       // Filter out closers who are currently assigned to an in-process lead
-      closersData = closersData.filter(closer => !inProcessLeadIds.has(closer.uid));
+      closersData = closersData.filter(closer => !inProcessLeadAssignedCloserIds.has(closer.uid));
       
+      // Default and sort by lineupOrder client-side for the remaining closers
       closersData = closersData.map((closer, index) => ({
         ...closer,
         lineupOrder: typeof closer.lineupOrder === 'number' ? closer.lineupOrder : (index + 1) * 100000,
@@ -95,7 +96,7 @@ export default function CloserLineup() {
         if (orderA !== orderB) {
           return orderA - orderB;
         }
-        return a.name.localeCompare(b.name);
+        return a.name.localeCompare(b.name); // Fallback sort
       });
       
       setClosers(closersData);
@@ -106,7 +107,7 @@ export default function CloserLineup() {
     });
 
     return () => unsubscribeClosers();
-  }, [user, inProcessLeadIds]); // Re-run if inProcessLeadIds changes
+  }, [user, inProcessLeadAssignedCloserIds]); // Re-run if user or the set of assigned closer IDs changes
 
   const isLoading = loadingClosers || loadingLeads;
 
@@ -132,7 +133,7 @@ export default function CloserLineup() {
                 <CloserCard 
                   key={closer.uid} 
                   closer={closer} 
-                  allowInteractiveToggle={false} // Status is handled by ManageClosersModal or AvailabilityToggle
+                  allowInteractiveToggle={false} 
                 />
               ))}
             </div>
