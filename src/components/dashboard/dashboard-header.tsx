@@ -35,7 +35,7 @@ export default function DashboardHeader() {
           </nav>
           <div className="flex items-center justify-end space-x-2 md:space-x-4"> {/* Adjusted spacing for smaller screens */}
             {(user?.role === 'setter' || user?.role === 'manager') && (
-              <Button onClick={() => setIsCreateLeadModalOpen(true)} variant="secondary" size="sm">
+              <Button onClick={() => setIsCreateLeadModalOpen(true)} variant="primary-solid" size="sm">
                 <PlusCircle className="mr-2 h-5 w-5" />
                 Create New Lead
               </Button>
