@@ -25,16 +25,24 @@ export default function TeamUserManagement() {
   useEffect(() => {
     if (managerUser?.role === "manager" && managerUser.teamId) {
       setLoading(true);
+      // Removed orderBy("displayName", "asc") from here
       const usersQuery = query(
         collection(db, "users"),
-        where("teamId", "==", managerUser.teamId),
-        orderBy("displayName", "asc")
+        where("teamId", "==", managerUser.teamId)
       );
 
       const unsubscribe = onSnapshot(usersQuery, (snapshot) => {
-        const usersData = snapshot.docs
+        let usersData = snapshot.docs
           .map((doc) => ({ uid: doc.id, ...doc.data() } as AppUser))
           .filter(u => u.uid !== managerUser.uid); // Exclude the manager themselves
+        
+        // Sort client-side
+        usersData.sort((a, b) => {
+          const nameA = a.displayName || a.email || "";
+          const nameB = b.displayName || b.email || "";
+          return nameA.localeCompare(nameB);
+        });
+          
         setTeamUsers(usersData);
         setLoading(false);
       }, (error) => {
@@ -135,7 +143,7 @@ export default function TeamUserManagement() {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-semibold">{teamMember.displayName || "No Name"}</p>
+                      <p className="font-semibold">{teamMember.displayName || teamMember.email || "Unnamed User"}</p>
                       <p className="text-sm text-muted-foreground">{teamMember.email}</p>
                       <p className="text-xs text-muted-foreground capitalize flex items-center">
                         {teamMember.role === 'manager' ? <ShieldCheck className="mr-1 h-3 w-3 text-primary" /> : <UserCog className="mr-1 h-3 w-3" />}
@@ -183,3 +191,4 @@ export default function TeamUserManagement() {
     </>
   );
 }
+
