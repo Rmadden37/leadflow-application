@@ -78,8 +78,8 @@ export default {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
-      boxShadow: { 
-        // Removed 'card-glow-dark' as it's replaced by frosted glass effect
+      boxShadow: {
+        'card-glow-dark': '0px 0px 35px -5px hsla(163, 50%, 35%, 0.35)',
       },
       keyframes: {
         'accordion-down': {

@@ -11,8 +11,8 @@ const Card = React.forwardRef<
     className={cn(
       "rounded-lg border bg-card text-card-foreground", // Base styles
       "shadow-sm", // Default shadow for light mode
-      // Dark mode: Frosted glass effect
-      "dark:bg-opacity-5 dark:border-opacity-20 dark:backdrop-blur-lg", 
+      // Dark mode: Frosted glass effect with a subtle glow
+      "dark:bg-opacity-5 dark:border-opacity-20 dark:backdrop-blur-lg dark:shadow-card-glow-dark", 
       className
     )}
     {...props}
