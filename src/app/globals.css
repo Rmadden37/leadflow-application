@@ -7,6 +7,9 @@
     --background: 213 33% 95%; /* #F0F4F8 */
     --foreground: 215 25% 17%; /* Dark Gray for text */
 
+    --background-gradient-from: 213 33% 97%; /* Slightly lighter for gradient start */
+    --background-gradient-to: 213 33% 93%;   /* Slightly darker for gradient end */
+
     --muted: 216 12% 84%;
     --muted-foreground: 216 12% 44%;
 
@@ -21,6 +24,8 @@
 
     --primary: 216 78% 60%; /* #4A8FE7 */
     --primary-foreground: 0 0% 100%; /* White */
+    --primary-gradient-from: 216 78% 65%;
+    --primary-gradient-to: 216 78% 55%;
 
     --secondary: 216 12% 90%;
     --secondary-foreground: 215 25% 17%;
@@ -55,6 +60,9 @@
     --background: 220 10% 10%; /* Very Dark Grey/Almost Black */
     --foreground: 220 10% 90%; /* Light Grey */
 
+    --background-gradient-from: 220 10% 12%;
+    --background-gradient-to: 220 10% 8%;
+
     --muted: 220 10% 20%; /* Darker Grey */
     --muted-foreground: 220 10% 55%; /* Medium Grey */
 
@@ -69,6 +77,9 @@
 
     --primary: 210 40% 55%; /* Muted Cool Blue */
     --primary-foreground: 0 0% 100%; /* White */
+    --primary-gradient-from: 210 40% 60%;
+    --primary-gradient-to: 210 40% 50%;
+
 
     --secondary: 220 10% 30%; /* Medium Grey for secondary */
     --secondary-foreground: 220 10% 85%; /* Light-ish Grey */
@@ -105,6 +116,10 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body;
+    @apply text-foreground font-body;
+    /* Apply the gradient background */
+    background-image: linear-gradient(to bottom right, hsl(var(--background-gradient-from)), hsl(var(--background-gradient-to)));
+    background-attachment: fixed; /* Ensures the gradient covers the viewport and doesn't scroll with content */
+    min-height: 100vh; /* Ensure body takes at least full viewport height */
   }
 }
