@@ -76,7 +76,7 @@ export default function CloserCard({ closer, allowInteractiveToggle = true }: Cl
                 />
                 <Label
                   htmlFor={`status-toggle-${closer.uid}`}
-                  className={`text-xs font-medium ${currentStatusIsOnDuty ? 'text-green-600' : 'text-red-600'}`}
+                  className={`text-xs font-medium ${currentStatusIsOnDuty ? 'text-accent' : 'text-destructive'}`}
                 >
                   {isUpdatingStatus ? (
                     <Loader2 className="h-3 w-3 animate-spin" /> 
@@ -86,7 +86,7 @@ export default function CloserCard({ closer, allowInteractiveToggle = true }: Cl
                 </Label>
               </div>
             ) : (
-              <div className={`flex items-center text-xs mt-1 ${currentStatusIsOnDuty ? "text-green-600" : "text-red-600"}`}>
+              <div className={`flex items-center text-xs mt-1 ${currentStatusIsOnDuty ? "text-accent" : "text-destructive"}`}>
                 {currentStatusIsOnDuty ? (
                   <UserCheck className="mr-1 h-4 w-4" />
                 ) : (

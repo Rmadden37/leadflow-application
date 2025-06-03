@@ -92,7 +92,7 @@ export default function AvailabilityToggle() {
         disabled={isLoading}
         aria-label={isUIDuty ? "Set to Off Duty" : "Set to On Duty"}
       />
-      <Label htmlFor="availability-toggle" className={`text-sm font-medium ${isUIDuty ? 'text-green-600' : 'text-red-600'}`}>
+      <Label htmlFor="availability-toggle" className={`text-sm font-medium ${isUIDuty ? 'text-accent' : 'text-destructive'}`}>
         {isUIDuty ? "On Duty" : "Off Duty"}
       </Label>
     </div>
