@@ -15,14 +15,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { UserX, Loader2 } from "lucide-react";
+import { Users, Loader2 } from "lucide-react"; // Changed UserX to Users
 
-interface OffDutyClosersModalProps {
+interface ManageClosersModalProps { // Renamed interface for clarity, was OffDutyClosersModalProps
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function OffDutyClosersModal({ isOpen, onClose }: OffDutyClosersModalProps) {
+export default function ManageClosersModal({ isOpen, onClose }: ManageClosersModalProps) {
   const { user } = useAuth();
   const [closers, setClosers] = useState<Closer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,7 +38,7 @@ export default function OffDutyClosersModal({ isOpen, onClose }: OffDutyClosersM
     const q = query(
       collection(db, "closers"),
       where("teamId", "==", user.teamId),
-      where("status", "==", "Off Duty"),
+      // Removed: where("status", "==", "Off Duty") to fetch all closers
       orderBy("name", "asc")
     );
 
@@ -58,7 +58,7 @@ export default function OffDutyClosersModal({ isOpen, onClose }: OffDutyClosersM
       setClosers(closersData);
       setLoading(false);
     }, (error) => {
-      console.error("Error fetching off-duty closers for modal:", error);
+      console.error("Error fetching all closers for modal:", error);
       setLoading(false);
     });
 
@@ -72,11 +72,11 @@ export default function OffDutyClosersModal({ isOpen, onClose }: OffDutyClosersM
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-headline flex items-center">
-            <UserX className="mr-2 h-6 w-6 text-muted-foreground" />
-            Off Duty Closers
+            <Users className="mr-2 h-6 w-6 text-muted-foreground" /> {/* Changed icon */}
+            Manage Closer Status
           </DialogTitle>
           <DialogDescription>
-            View and manage closers who are currently off duty.
+            View all team closers and manage their duty status.
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
@@ -86,7 +86,7 @@ export default function OffDutyClosersModal({ isOpen, onClose }: OffDutyClosersM
             </div>
           ) : closers.length === 0 ? (
             <div className="flex h-40 items-center justify-center">
-              <p className="text-muted-foreground">No closers are currently off duty.</p>
+              <p className="text-muted-foreground">No closers found for this team.</p>
             </div>
           ) : (
             <ScrollArea className="h-[calc(60vh)] max-h-[400px] pr-3"> {/* Adjusted height */}

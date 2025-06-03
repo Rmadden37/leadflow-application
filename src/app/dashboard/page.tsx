@@ -4,7 +4,7 @@
 import InProcessLeads from "@/components/dashboard/in-process-leads";
 import CloserLineup from "@/components/dashboard/closer-lineup";
 import LeadQueue from "@/components/dashboard/lead-queue";
-import OffDutyClosers from "@/components/dashboard/off-duty-closers"; // This is now the button component
+import ManageClosersButton from "@/components/dashboard/off-duty-closers"; // Updated import name for clarity
 import { useAuth } from "@/hooks/use-auth";
 
 export default function DashboardPage() {
@@ -23,15 +23,13 @@ export default function DashboardPage() {
       <div>
         <CloserLineup />
       </div>
-      {/* OffDutyClosers is now a button that opens a modal, still only for managers */}
       {user.role === 'manager' && ( 
         <div className="lg:col-span-1"> 
-         <OffDutyClosers />
+         <ManageClosersButton /> {/* Updated component name */}
         </div>
       )}
-       {(user.role === 'setter' || user.role === 'closer') && ( // If not manager, this column might be empty or used for something else
+       {(user.role === 'setter' || user.role === 'closer') && (
         <div className="hidden lg:block lg:col-span-1"> 
-         {/* This column can be used for other content for setters/closers if needed */}
         </div>
       )}
     </div>
