@@ -5,9 +5,9 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, UserCircle, ClipboardList, PlusCircle, Loader2 } from "lucide-react";
+import { LogOut, UserCircle, ClipboardList, PlusCircle, Loader2, History } from "lucide-react";
 import AvailabilityToggle from "./availability-toggle";
-import CreateLeadForm from "./create-lead-form"; // Import the new form
+import CreateLeadForm from "./create-lead-form"; 
 import { useState } from "react";
 
 export default function DashboardHeader() {
@@ -22,7 +22,17 @@ export default function DashboardHeader() {
             <ClipboardList className="h-8 w-8" />
             <span className="text-2xl font-bold font-headline">LeadFlow</span>
           </Link>
-          <div className="flex flex-1 items-center justify-end space-x-4">
+          <nav className="flex items-center space-x-2 mr-auto">
+             {user?.role === 'manager' && (
+                <Button asChild variant="ghost" size="sm">
+                  <Link href="/dashboard/all-leads">
+                    <History className="mr-2 h-5 w-5" />
+                    All Leads
+                  </Link>
+                </Button>
+            )}
+          </nav>
+          <div className="flex items-center justify-end space-x-4">
             {(user?.role === 'setter' || user?.role === 'manager') && (
               <Button onClick={() => setIsCreateLeadModalOpen(true)} variant="default" size="sm">
                 <PlusCircle className="mr-2 h-5 w-5" />
