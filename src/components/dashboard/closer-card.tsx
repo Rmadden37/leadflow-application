@@ -22,7 +22,7 @@ interface CloserCardProps {
   canMoveDown?: boolean;
   showMoveControls?: boolean;
   isUpdatingOrder?: boolean;
-  assignedLeadName?: string; // New prop
+  assignedLeadName?: string;
 }
 
 export default function CloserCard({
@@ -40,7 +40,6 @@ export default function CloserCard({
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   const canUserManagerOrSelfToggle = user && (user.role === 'manager' || (user.role === 'closer' && user.uid === closer.uid));
-  // If assignedLeadName is present, this card represents a busy closer, so interactive toggle should not be shown.
   const showInteractiveSwitch = canUserManagerOrSelfToggle && allowInteractiveToggle && !assignedLeadName;
 
   const handleToggleCloserAvailability = async (checked: boolean) => {
@@ -71,13 +70,16 @@ export default function CloserCard({
   };
 
   const currentStatusIsOnDuty = closer.status === "On Duty";
+  const avatarSrc = closer.avatarUrl || `https://ui-avatars.com/api/?name=${(closer.name || "User").replace(/\s+/g, '+')}&background=random&color=fff`;
+  const avatarDataAiHint = closer.avatarUrl ? undefined : (closer.name?.split(' ')[0]?.toLowerCase() || "person");
+
 
   return (
     <Card className="shadow-sm hover:shadow-md transition-shadow duration-200 dark:bg-black/[.25] dark:border-white/[.08]">
       <CardContent className="p-3">
         <div className="flex items-start space-x-3">
           <Avatar className="h-12 w-12 border border-border">
-            <AvatarImage src={closer.avatarUrl || `https://ui-avatars.com/api/?name=${(closer.name || "User").replace(/\s+/g, '+')}&background=random`} />
+            <AvatarImage src={avatarSrc} alt={closer.name || "User"} data-ai-hint={avatarDataAiHint} />
             <AvatarFallback>{closer.name ? closer.name.substring(0, 2).toUpperCase() : "N/A"}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
@@ -118,7 +120,7 @@ export default function CloserCard({
               </div>
             )}
           </div>
-          {showMoveControls && onMove && !assignedLeadName && ( // Hide move controls if closer is assigned
+          {showMoveControls && onMove && !assignedLeadName && (
             <div className="flex flex-col space-y-1 ml-auto">
               <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove('up')} disabled={!canMoveUp || isUpdatingStatus || isUpdatingOrder}>
                 <ChevronUp className="h-4 w-4" />

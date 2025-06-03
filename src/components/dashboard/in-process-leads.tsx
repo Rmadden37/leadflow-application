@@ -18,26 +18,26 @@ interface InProcessDisplayItem {
 }
 
 // --- Sample Data for Demonstration ---
-const sampleCloserDemo: Closer = {
-  uid: "sample-nextup-closer-uid",
-  name: "NextUp Closer (Demo)",
-  status: "On Duty",
-  teamId: "sample-team-id", // This should match your teamId for visibility if testing
+const sampleCloserAndrea: Closer = {
+  uid: "sample-andrea-rovayo-uid", // Unique sample UID
+  name: "Andrea Rovayo",
+  status: "On Duty", // She's working, so effectively 'On Duty'
+  teamId: "sample-team-id",
   role: "closer",
-  avatarUrl: `https://placehold.co/100x100.png`, // Generic placeholder
+  avatarUrl: `https://placehold.co/100x100.png`, // Generic placeholder, matching image style
   lineupOrder: 1,
 };
 
-const sampleLeadAssignedToDemo: Lead = {
-  id: "sample-dynamic-demo-lead-id",
-  customerName: "Dynamic Demo Lead",
-  customerPhone: "(555) 000-DEMO",
-  address: "123 Simulation Street",
+const sampleLeadAssignedToAndrea: Lead = {
+  id: "sample-tony-the-tiger-lead-id", // Unique sample ID
+  customerName: "Tony the Tiger",
+  customerPhone: "(555) GRR-REAT",
+  address: "Kellogg's HQ, Battle Creek, MI",
   status: "in_process",
-  teamId: "sample-team-id", // This should match your teamId for visibility if testing
+  teamId: "sample-team-id",
   dispatchType: "immediate",
-  assignedCloserId: sampleCloserDemo.uid,
-  assignedCloserName: sampleCloserDemo.name,
+  assignedCloserId: sampleCloserAndrea.uid,
+  assignedCloserName: sampleCloserAndrea.name,
   createdAt: Timestamp.now(),
   updatedAt: Timestamp.now(),
   setterName: "Demo Setter",
@@ -143,27 +143,27 @@ export default function InProcessLeads() {
           // Display sample data if no real in-process leads
           <ScrollArea className="h-[300px] md:h-[400px] pr-4">
             <div className="space-y-4 p-4 border border-dashed border-muted-foreground rounded-md">
-              <p className="text-sm text-muted-foreground text-center mb-2">
-                Showing a sample assignment (no real leads "in process" currently).
+              <p className="text-sm text-muted-foreground text-center mb-3">
+                <strong>Example:</strong> Andrea Rovayo assigned to "Tony the Tiger".
               </p>
               <div className="space-y-2">
                 <CloserCard
-                  closer={sampleCloserDemo}
-                  assignedLeadName={sampleLeadAssignedToDemo.customerName}
+                  closer={{...sampleCloserAndrea, avatarUrl: `https://placehold.co/100x100.png`}}
+                  assignedLeadName={sampleLeadAssignedToAndrea.customerName}
                   allowInteractiveToggle={false}
                 />
-                <LeadCard lead={sampleLeadAssignedToDemo} context="in-process" />
+                <LeadCard lead={sampleLeadAssignedToAndrea} context="in-process" />
               </div>
               <p className="text-xs text-muted-foreground text-center mt-4">
-                <strong>What would happen:</strong>
+                <strong>In a real scenario:</strong>
                 <br />
-                - "Dynamic Demo Lead" would disappear from the Lead Queue's "Waiting List".
+                - "Tony the Tiger" would disappear from the Lead Queue's "Waiting List".
                 <br />
-                - "NextUp Closer (Demo)" would disappear from the "Closer Lineup".
+                - "Andrea Rovayo" would disappear from the "Closer Lineup".
               </p>
             </div>
           </ScrollArea>
-        ) : (
+        ) : displayItems.length > 0 ? (
           <ScrollArea className="h-[300px] md:h-[400px] pr-4">
             <div className="space-y-4">
               {displayItems.map(({ lead, closer }) => (
@@ -180,6 +180,12 @@ export default function InProcessLeads() {
               ))}
             </div>
           </ScrollArea>
+        ) : (
+           <div className="flex flex-col h-full items-center justify-center text-center">
+            <Ghost className="h-12 w-12 text-muted-foreground mb-3" />
+            <p className="text-lg font-medium text-muted-foreground">It's quiet... too quiet.</p>
+            <p className="text-sm text-muted-foreground">No leads are currently in process.</p>
+          </div>
         )}
       </CardContent>
     </Card>
