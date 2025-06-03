@@ -30,17 +30,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
 
   useEffect(() => {
+    console.log("[AuthProvider] Setting up onAuthStateChanged listener.");
     const unsubscribeAuth = onAuthStateChanged(auth, async (fbUser) => {
+      console.log("[AuthProvider] onAuthStateChanged triggered. Firebase user:", fbUser?.uid);
       setFirebaseUser(fbUser);
       if (fbUser) {
         // User is signed in
       } else {
+        console.log("[AuthProvider] No Firebase user. Clearing AppUser.");
         setUser(null);
         setLoading(false);
       }
     });
 
     return () => {
+      console.log("[AuthProvider] Cleaning up onAuthStateChanged listener.");
       unsubscribeAuth();
     }
   }, []);
@@ -49,12 +53,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let unsubscribeUserDoc: (() => void) | undefined;
 
     if (firebaseUser) {
+      console.log(`[AuthProvider] Firebase user ${firebaseUser.uid} detected. Setting up snapshot for 'users' collection.`);
       setLoading(true);
       const userDocRef = doc(db, "users", firebaseUser.uid);
       
       unsubscribeUserDoc = onSnapshot(userDocRef, (docSnap) => {
         if (docSnap.exists()) {
           const appUserData = { uid: firebaseUser.uid, ...docSnap.data() } as AppUser;
+          console.log("[AuthProvider] User document snapshot received. Data:", appUserData);
           setUser(appUserData);
         } else {
           console.error("[AuthProvider] User document not found in 'users' collection for UID:", firebaseUser.uid);
@@ -67,11 +73,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setLoading(false);
       });
     } else {
+      console.log("[AuthProvider] No Firebase user. Clearing AppUser and ensuring loading is false.");
       setUser(null); 
       setLoading(false); 
     }
     return () => {
       if (unsubscribeUserDoc) {
+        console.log("[AuthProvider] Cleaning up user document snapshot listener.");
         unsubscribeUserDoc();
       }
     };
@@ -79,33 +87,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
   useEffect(() => {
+    console.log(`[AuthProvider] Auth state change: loading=${loading}, user=${!!user}, pathname=${pathname}`);
     if (!loading && !user && pathname !== "/login") {
+      console.log("[AuthProvider] Not loading, no user, not on login page. Redirecting to /login.");
       router.push("/login");
     }
     if (!loading && user && pathname === "/login") {
+      console.log("[AuthProvider] Not loading, user exists, on login page. Redirecting to /dashboard.");
       router.push("/dashboard");
     }
   }, [user, loading, router, pathname]);
 
   const logout = async () => {
+    console.log("[AuthProvider] logout called.");
     setLoading(true);
     await firebaseSignOut(auth);
     setUser(null);
     setFirebaseUser(null);
     router.push("/login");
     setLoading(false);
+    console.log("[AuthProvider] logout complete.");
   };
   
   if (loading && (pathname !== "/login" && !user)) {
+     console.log("[AuthProvider] Showing global loading spinner.");
      return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
   }
+  
+  const contextValue = { firebaseUser, user, loading, teamId: user?.teamId || null, role: user?.role || null, logout };
+  console.log("[AuthProvider] Current auth context value:", contextValue);
 
   return (
-    <AuthContext.Provider value={{ firebaseUser, user, loading, teamId: user?.teamId || null, role: user?.role || null, logout }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
@@ -118,4 +135,3 @@ export const useAuth = () => {
   }
   return context;
 };
-

@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import type { Lead } from "@/types";
 import { useAuth } from "@/hooks/use-auth";
 import { db } from "@/lib/firebase";
-import { collection, query, where, onSnapshot, orderBy, limit, writeBatch, doc, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, onSnapshot, orderBy, limit, writeBatch, doc, serverTimestamp, Timestamp } from "firebase/firestore";
 import LeadCard from "./lead-card";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -26,9 +26,11 @@ export default function LeadQueue() {
 
 
   useEffect(() => {
+    console.log("[LeadQueue - WaitingList] Hook triggered. User from useAuth:", user);
     if (!user || !user.teamId) {
+      console.log("[LeadQueue - WaitingList] No user or no user.teamId. Skipping query. User:", user);
       setLoadingWaiting(false);
-      setLoadingScheduled(false);
+      setWaitingLeads([]);
       return;
     }
     setLoadingWaiting(true);
@@ -40,23 +42,32 @@ export default function LeadQueue() {
       orderBy("createdAt", "asc"), 
       limit(20)
     );
+    console.log("[LeadQueue - WaitingList] Querying for waiting_assignment leads. Query:", qWaiting);
 
     const unsubscribeWaiting = onSnapshot(qWaiting, (querySnapshot) => {
+      console.log(`[LeadQueue - WaitingList] Snapshot received. Number of documents: ${querySnapshot.docs.length}`);
       const leadsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lead));
+      console.log("[LeadQueue - WaitingList] Mapped waitingLeadsData:", leadsData);
       setWaitingLeads(leadsData);
       setLoadingWaiting(false);
     }, (error) => {
-      console.error("Error fetching waiting assignment leads:", error);
+      console.error("[LeadQueue - WaitingList] Error fetching waiting assignment leads:", error);
       setLoadingWaiting(false);
     });
 
-    return () => unsubscribeWaiting();
+    return () => {
+      console.log("[LeadQueue - WaitingList] Cleaning up snapshot listener.");
+      unsubscribeWaiting()
+    };
   }, [user]);
 
   // Effect for fetching scheduled leads and processing them
   useEffect(() => {
+    console.log("[LeadQueue - ScheduledList] Hook triggered. User from useAuth:", user);
     if (!user || !user.teamId) {
+      console.log("[LeadQueue - ScheduledList] No user or no user.teamId. Skipping query. User:", user);
       setLoadingScheduled(false);
+      setScheduledLeads([]);
       return;
     }
     setLoadingScheduled(true);
@@ -67,9 +78,13 @@ export default function LeadQueue() {
       where("status", "==", "rescheduled"),
       orderBy("scheduledAppointmentTime", "asc") // Order by appointment time to process soonest first
     );
+    console.log("[LeadQueue - ScheduledList] Querying for rescheduled leads. Query:", qScheduled);
+
 
     const unsubscribeScheduled = onSnapshot(qScheduled, async (querySnapshot) => {
+      console.log(`[LeadQueue - ScheduledList] Snapshot received. Number of documents: ${querySnapshot.docs.length}`);
       const leadsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lead));
+      console.log("[LeadQueue - ScheduledList] Mapped scheduledLeadsData:", leadsData);
       setScheduledLeads(leadsData);
       setLoadingScheduled(false);
 
@@ -77,14 +92,18 @@ export default function LeadQueue() {
       const now = new Date();
       const leadsToMoveBatch = writeBatch(db);
       let movedCount = 0;
+      console.log(`[LeadQueue - ScheduledList] Processing ${leadsData.length} scheduled leads at ${now.toISOString()}`);
 
       leadsData.forEach(lead => {
         if (lead.scheduledAppointmentTime && !processedLeadIds.has(lead.id)) {
           const appointmentTime = lead.scheduledAppointmentTime.toDate();
           const timeUntilAppointment = appointmentTime.getTime() - now.getTime();
+          
+          console.log(`[LeadQueue - ScheduledList] Lead ID: ${lead.id}, Appt Time: ${appointmentTime.toISOString()}, Time Until: ${timeUntilAppointment}ms`);
 
           // If current time is 45 mins before appointment or appointment has passed
           if (timeUntilAppointment <= FORTY_FIVE_MINUTES_MS) {
+            console.log(`[LeadQueue - ScheduledList] Moving lead ID: ${lead.id} to waiting_assignment. Original closer: ${lead.assignedCloserName}`);
             const leadRef = doc(db, "leads", lead.id);
             leadsToMoveBatch.update(leadRef, {
               status: "waiting_assignment", // Move to waiting list
@@ -92,22 +111,26 @@ export default function LeadQueue() {
               // assignedCloserId and assignedCloserName remain as they were
             });
             movedCount++;
-            // Add to processedLeadIds to prevent immediate re-processing by this client
-            // This is a client-side guard; backend processing is more robust.
             setProcessedLeadIds(prev => new Set(prev).add(lead.id));
           }
+        } else if (processedLeadIds.has(lead.id)) {
+            console.log(`[LeadQueue - ScheduledList] Lead ID: ${lead.id} was already processed by this client session.`);
+        } else if (!lead.scheduledAppointmentTime) {
+            console.warn(`[LeadQueue - ScheduledList] Lead ID: ${lead.id} has 'rescheduled' status but no scheduledAppointmentTime.`);
         }
       });
 
       if (movedCount > 0) {
+        console.log(`[LeadQueue - ScheduledList] Committing batch to move ${movedCount} lead(s).`);
         try {
           await leadsToMoveBatch.commit();
           toast({
             title: "Leads Updated",
             description: `${movedCount} scheduled lead(s) moved to waiting list.`,
           });
+          console.log(`[LeadQueue - ScheduledList] Successfully moved ${movedCount} lead(s).`);
         } catch (error) {
-          console.error("Error moving scheduled leads:", error);
+          console.error("[LeadQueue - ScheduledList] Error moving scheduled leads:", error);
           toast({
             title: "Update Failed",
             description: "Could not move scheduled leads automatically.",
@@ -116,11 +139,14 @@ export default function LeadQueue() {
         }
       }
     }, (error) => {
-      console.error("Error fetching scheduled leads:", error);
+      console.error("[LeadQueue - ScheduledList] Error fetching scheduled leads:", error);
       setLoadingScheduled(false);
     });
     
-    return () => unsubscribeScheduled();
+    return () => {
+      console.log("[LeadQueue - ScheduledList] Cleaning up snapshot listener.");
+      unsubscribeScheduled();
+    }
   }, [user, toast, processedLeadIds]);
 
 
