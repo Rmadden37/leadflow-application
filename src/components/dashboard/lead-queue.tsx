@@ -186,7 +186,7 @@ export default function LeadQueue() {
               </div>
             ) : waitingLeads.length === 0 ? (
               <div className="flex h-full items-center justify-center">
-                <p className="text-muted-foreground">Waiting list is empty.</p>
+                <p className="text-muted-foreground">No leads waiting</p>
               </div>
             ) : (
               <ScrollArea className="h-[280px] md:h-[380px] pr-4">
