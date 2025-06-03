@@ -3,27 +3,54 @@
 
 import { useAuth } from "@/hooks/use-auth";
 import { db } from "@/lib/firebase";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, getDoc } from "firebase/firestore";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 
 export default function AvailabilityToggle() {
-  const { user } = useAuth();
+  const { user } = useAuth(); // `user` here is AppUser (from `users` collection)
   const { toast } = useToast();
-  // Initialize based on user.status. Assuming "On Duty" means available.
-  const [isUIDuty, setIsUIDuty] = useState(user?.status === "On Duty");
+  
+  const [isUIDuty, setIsUIDuty] = useState(false); // Default to false, will be updated from Firestore
   const [isLoading, setIsLoading] = useState(false);
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
 
+  // Effect to fetch initial status from 'closers' collection
   useEffect(() => {
-    if (user?.status !== undefined) {
-      setIsUIDuty(user.status === "On Duty");
+    if (user?.uid && user.role === 'closer') {
+      const fetchCloserStatus = async () => {
+        setIsLoading(true);
+        // Assume document ID in 'closers' collection is the same as Firebase Auth UID
+        const closerDocRef = doc(db, "closers", user.uid);
+        try {
+          const docSnap = await getDoc(closerDocRef);
+          if (docSnap.exists()) {
+            const closerData = docSnap.data();
+            setIsUIDuty(closerData.status === "On Duty");
+          } else {
+            // If no document in 'closers', default to off duty or handle as error
+            setIsUIDuty(false); 
+            console.warn(`Closer document not found in 'closers' collection for UID: ${user.uid}`);
+          }
+        } catch (error) {
+          console.error("Error fetching closer status:", error);
+          setIsUIDuty(false); // Default to off-duty on error
+        } finally {
+          setIsLoading(false);
+          setInitialLoadDone(true);
+        }
+      };
+      fetchCloserStatus();
     }
-  }, [user?.status]);
+  }, [user?.uid, user?.role]);
 
-  if (!user || user.role !== "closer") {
-    return null;
+
+  if (!user || user.role !== "closer" || !initialLoadDone) {
+    // Don't render if not a closer or if initial status hasn't been loaded yet
+    // to prevent toggle appearing in an incorrect initial state.
+    return null; 
   }
 
   const handleToggleAvailability = async (checked: boolean) => {
@@ -34,16 +61,17 @@ export default function AvailabilityToggle() {
     const newFirestoreStatus = checked ? "On Duty" : "Off Duty";
 
     try {
-      const userDocRef = doc(db, "users", user.uid);
-      await updateDoc(userDocRef, {
-        status: newFirestoreStatus, // Update the 'status' field in Firestore
+      // Assume document ID in 'closers' collection is the same as Firebase Auth UID
+      const closerDocRef = doc(db, "closers", user.uid);
+      await updateDoc(closerDocRef, {
+        status: newFirestoreStatus,
       });
       toast({
         title: "Status Updated",
         description: `You are now ${newFirestoreStatus}.`,
       });
     } catch (error) {
-      console.error("Error updating availability status:", error);
+      console.error("Error updating availability status in 'closers' collection:", error);
       setIsUIDuty(!checked); // Revert optimistic update
       toast({
         title: "Update Failed",
@@ -70,3 +98,4 @@ export default function AvailabilityToggle() {
     </div>
   );
 }
+

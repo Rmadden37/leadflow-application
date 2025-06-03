@@ -6,10 +6,12 @@ export type UserRole = "setter" | "closer" | "manager";
 export interface AppUser {
   uid: string;
   email: string | null;
-  displayName?: string | null;
+  displayName?: string | null; // This can be the general user display name
   role: UserRole;
   teamId: string;
-  status?: "On Duty" | "Off Duty" | string; // For closers, using string for flexibility
+  // The status field is now primarily managed in the 'closers' collection for closers
+  // This status in AppUser might be a general status or specific to non-closer roles if needed.
+  status?: "On Duty" | "Off Duty" | string;
 }
 
 export type LeadStatus =
@@ -34,9 +36,14 @@ export interface Lead {
   dispositionNotes?: string;
 }
 
+// Updated Closer type to reflect the fields in the 'closers' collection
 export interface Closer {
-  uid: string;
+  uid: string; // Document ID from 'closers' collection
   name: string;
-  status: "On Duty" | "Off Duty"; // Changed from "Available" | "Off Duty"
+  status: "On Duty" | "Off Duty";
   teamId: string;
+  role?: UserRole; // Role is also in the 'closers' collection as per screenshot
+  avatarUrl?: string;
+  phone?: string;
 }
+

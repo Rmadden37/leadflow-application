@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { AppUser, Closer } from "@/types";
+import type { Closer } from "@/types";
 import { useAuth } from "@/hooks/use-auth";
 import { db } from "@/lib/firebase";
 import { collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
@@ -12,7 +12,7 @@ import { Users, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function CloserLineup() {
-  const { user } = useAuth();
+  const { user } = useAuth(); // user.teamId is from the logged-in user (AppUser)
   const [closers, setClosers] = useState<Closer[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -23,22 +23,25 @@ export default function CloserLineup() {
     }
     setLoading(true);
     
+    // Query the 'closers' collection directly
     const q = query(
-      collection(db, "users"),
+      collection(db, "closers"), // Changed from "users" to "closers"
       where("teamId", "==", user.teamId),
-      where("role", "==", "closer"),
       where("status", "==", "On Duty"), 
-      orderBy("displayName", "asc")
+      orderBy("name", "asc") // Assuming 'name' is the field for display name in 'closers' collection
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const closersData = querySnapshot.docs.map(doc => {
-        const data = doc.data() as AppUser;
+        const data = doc.data();
         return {
-          uid: doc.id,
-          name: data.displayName || data.email || "Unnamed Closer",
-          status: "On Duty", // Directly set as "On Duty" as per query
+          uid: doc.id, // The document ID from 'closers' collection
+          name: data.name,
+          status: data.status as "On Duty" | "Off Duty",
           teamId: data.teamId,
+          role: data.role, // Include other fields from your 'closers' collection
+          avatarUrl: data.avatarUrl,
+          phone: data.phone,
         } as Closer;
       });
       setClosers(closersData);
@@ -78,3 +81,4 @@ export default function CloserLineup() {
     </Card>
   );
 }
+

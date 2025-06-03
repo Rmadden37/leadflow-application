@@ -2,7 +2,7 @@
 "use client";
 
 import type { Closer } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card"; // Removed CardHeader, CardTitle as they are not used
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserCheck, UserX } from "lucide-react";
 
@@ -18,8 +18,8 @@ export default function CloserCard({ closer }: CloserCardProps) {
       <CardContent className="p-3">
         <div className="flex items-center space-x-3">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={`https://ui-avatars.com/api/?name=${closer.name.replace(/\s+/g, '+')}&background=random`} />
-            <AvatarFallback>{closer.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+            <AvatarImage src={closer.avatarUrl || `https://ui-avatars.com/api/?name=${closer.name.replace(/\s+/g, '+')}&background=random`} />
+            <AvatarFallback>{closer.name ? closer.name.substring(0, 2).toUpperCase() : "N/A"}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
             <p className="text-sm font-medium font-headline">{closer.name}</p>
@@ -29,7 +29,7 @@ export default function CloserCard({ closer }: CloserCardProps) {
               ) : (
                 <UserX className="mr-1 h-3.5 w-3.5" />
               )}
-              {closer.status} {/* This will now display "On Duty" or "Off Duty" */}
+              {closer.status} {/* This will now display "On Duty" or "Off Duty" directly */}
             </div>
           </div>
         </div>
@@ -37,3 +37,4 @@ export default function CloserCard({ closer }: CloserCardProps) {
     </Card>
   );
 }
+
