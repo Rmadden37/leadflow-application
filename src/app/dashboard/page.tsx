@@ -1,3 +1,4 @@
+
 "use client";
 
 import InProcessLeads from "@/components/dashboard/in-process-leads";
@@ -17,10 +18,10 @@ export default function DashboardPage() {
         <InProcessLeads />
       </div>
       <div>
-        <CloserLineup />
+        <LeadQueue />
       </div>
       <div>
-        <LeadQueue />
+        <CloserLineup />
       </div>
       {user.role === 'manager' && ( // Only managers might need to see this prominently.
         <div className="lg:col-span-1"> 
