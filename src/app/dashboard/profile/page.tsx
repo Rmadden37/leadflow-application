@@ -15,8 +15,7 @@ import { auth, db } from "@/lib/firebase";
 import { updateProfile, sendPasswordResetEmail } from "firebase/auth";
 import { doc, updateDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, User, Mail, ShieldCheck, Edit3, KeyRound, History, ExternalLink } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
+import { Loader2, User, Mail, ShieldCheck, Edit3, KeyRound, History, ExternalLink, Briefcase } from "lucide-react";
 
 const profileFormSchema = z.object({
   displayName: z.string().min(2, { message: "Display name must be at least 2 characters." }).max(50, { message: "Display name cannot exceed 50 characters." }),
@@ -63,7 +62,9 @@ export default function ProfilePage() {
         title: "Profile Updated",
         description: "Your display name has been successfully updated.",
       });
-      form.reset({ displayName: values.displayName });
+      // Re-fetch user data or update local state if necessary
+      // For simplicity, we'll rely on AuthProvider to eventually reflect changes or form.reset
+      form.reset({ displayName: values.displayName }); 
     } catch (error: any) {
       console.error("Error updating profile:", error);
       toast({
@@ -120,7 +121,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto py-8 max-w-2xl">
+    <div className="container mx-auto py-8 max-w-2xl space-y-6">
       <Card className="shadow-xl">
         <CardHeader>
           <CardTitle className="text-2xl font-headline flex items-center">
@@ -167,28 +168,6 @@ export default function ProfilePage() {
               </Button>
             </form>
           </Form>
-
-          {user.role === 'manager' && (
-            <>
-              <Separator className="my-6" />
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium font-headline flex items-center">
-                  <History className="mr-2 h-5 w-5 text-primary"/>
-                  Manager Tools
-                </h3>
-                <Button asChild variant="outline" className="w-full sm:w-auto justify-start">
-                  <Link href="/dashboard/all-leads">
-                    View All Team Leads
-                    <ExternalLink className="ml-auto h-4 w-4 opacity-70" />
-                  </Link>
-                </Button>
-                 <p className="text-sm text-muted-foreground">
-                    Access a comprehensive list of all leads submitted by your team.
-                  </p>
-              </div>
-            </>
-          )}
-
         </CardContent>
         <CardFooter className="flex-col items-start space-y-4 border-t pt-6 mt-6">
             <div>
@@ -209,6 +188,33 @@ export default function ProfilePage() {
           </Button>
         </CardFooter>
       </Card>
+
+      {user.role === 'manager' && (
+        <Card className="shadow-xl">
+          <CardHeader>
+            <CardTitle className="text-xl font-headline flex items-center">
+                <Briefcase className="mr-3 h-6 w-6 text-primary" />
+                Manager Tools
+            </CardTitle>
+            <CardDescription>Access manager-specific functionalities.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+             <div>
+                <Button asChild variant="outline" className="w-full sm:w-auto justify-start">
+                  <Link href="/dashboard/all-leads">
+                    <History className="mr-2 h-4 w-4"/>
+                    View All Team Leads
+                    <ExternalLink className="ml-auto h-4 w-4 opacity-70" />
+                  </Link>
+                </Button>
+                 <p className="text-sm text-muted-foreground mt-2">
+                    Access a comprehensive list of all leads submitted by your team.
+                  </p>
+              </div>
+              {/* Add other manager tools here if needed in the future */}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
