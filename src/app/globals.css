@@ -60,8 +60,9 @@
     --background: 220 10% 10%; /* Very Dark Grey/Almost Black */
     --foreground: 220 10% 90%; /* Light Grey */
 
-    --background-gradient-from: 220 10% 12%;
-    --background-gradient-to: 220 10% 8%;
+    /* Solid very dark background for dark mode body */
+    --background-gradient-from: 220 10% 10%;
+    --background-gradient-to: 220 10% 10%;
 
     --muted: 220 10% 20%; /* Darker Grey */
     --muted-foreground: 220 10% 55%; /* Medium Grey */
