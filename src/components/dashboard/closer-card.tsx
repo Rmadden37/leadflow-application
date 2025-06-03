@@ -70,7 +70,7 @@ export default function CloserCard({
   const currentStatusIsOnDuty = closer.status === "On Duty";
 
   return (
-    <Card className="shadow-sm hover:shadow-md transition-shadow duration-200 dark:bg-black/[.15] dark:border-white/[.08]">
+    <Card className="shadow-sm hover:shadow-md transition-shadow duration-200 dark:bg-black/[.25] dark:border-white/[.08]">
       <CardContent className="p-3">
         <div className="flex items-center space-x-3">
           <Avatar className="h-12 w-12 border border-border">
@@ -78,7 +78,7 @@ export default function CloserCard({
             <AvatarFallback>{closer.name ? closer.name.substring(0, 2).toUpperCase() : "N/A"}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <p className="text-sm font-medium font-headline">{closer.name || "Unnamed Closer"}</p>
+            <p className="text-sm font-bold font-headline">{closer.name || "Unnamed Closer"}</p>
             {showInteractiveSwitch ? (
               <div className="flex items-center space-x-2 mt-1">
                 <Switch
