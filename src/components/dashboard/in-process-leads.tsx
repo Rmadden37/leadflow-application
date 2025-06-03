@@ -52,6 +52,9 @@ export default function InProcessLeads() {
   useEffect(() => {
     if (!user || !user.teamId || loadingClosers) {
       if (!user || !user.teamId) setLoadingLeads(false);
+      // If still loading closers, don't proceed to fetch leads yet as we need closer info.
+      // Set displayItems to empty to avoid showing stale data.
+      if (loadingClosers) setDisplayItems([]);
       return;
     }
     setLoadingLeads(true);
@@ -75,7 +78,7 @@ export default function InProcessLeads() {
         limit(20)
       );
     } else {
-      // Setters don't see this component
+      // Setters don't see this component, or if role is unexpected
       setDisplayItems([]);
       setLoadingLeads(false);
       return;
@@ -91,6 +94,7 @@ export default function InProcessLeads() {
       setLoadingLeads(false);
     }, (error) => {
       console.error("[InProcessLeads] Error fetching in-process leads:", error);
+      setDisplayItems([]); // Clear on error
       setLoadingLeads(false);
     });
 
@@ -103,41 +107,6 @@ export default function InProcessLeads() {
 
   const isLoading = loadingLeads || loadingClosers;
 
-  // --- SIMULATION DATA ---
-  const sampleFirstUpCloser: Closer = {
-    uid: 'sample-first-up-closer-uid',
-    name: 'First Up Closer (Demo)',
-    status: 'On Duty',
-    teamId: user?.teamId || 'Empire',
-    role: 'closer',
-    avatarUrl: 'https://placehold.co/100x100.png',
-    lineupOrder: 1,
-  };
-
-  const sampleCaptainCrookLeadAssigned: Lead = {
-    id: 'd9126755-72f4-4056-955e-8e3261af7c4e', // From screenshot
-    customerName: 'Captain Crook',
-    customerPhone: '(123) 456-7890', // From screenshot
-    address: '123 Pirate Cove, Tortuga', // Added sample address
-    status: 'in_process',
-    teamId: user?.teamId || 'Empire', // From screenshot
-    dispatchType: 'immediate', // From screenshot (type: "immediate")
-    assignedCloserId: sampleFirstUpCloser.uid,
-    assignedCloserName: sampleFirstUpCloser.name,
-    createdAt: Timestamp.fromDate(new Date('May 24, 2025 21:13:49 UTC-4')), // Parsed from screenshot submissionTime
-    updatedAt: Timestamp.now(),
-    dispositionNotes: '',
-    scheduledAppointmentTime: null,
-    setterId: 'sample-setter-id', // Placeholder
-    setterName: 'Sample Setter', // Placeholder
-    photoUrls: [],
-  };
-  // --- END SIMULATION DATA ---
-
-  const itemsToRender = displayItems.length > 0 ? displayItems : 
-    (!isLoading ? [{ lead: sampleCaptainCrookLeadAssigned, closer: sampleFirstUpCloser }] : []);
-
-
   return (
     <Card className="h-full flex flex-col shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -148,51 +117,35 @@ export default function InProcessLeads() {
         {isLoading && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden">
-        {itemsToRender.length > 0 ? (
-          <>
-            {displayItems.length === 0 && !isLoading && (
-              <Alert variant="default" className="mb-4">
-                <Info className="h-4 w-4" />
-                <AlertTitle className="font-semibold">Visual Simulation</AlertTitle>
-                <AlertDescription className="text-xs">
-                  This shows "Captain Crook" assigned to "First Up Closer (Demo)". 
-                  In a real scenario, "Captain Crook" would be removed from the "Lead Queue", 
-                  and "First Up Closer" from the "Closer Lineup".
-                </AlertDescription>
-              </Alert>
-            )}
-            <ScrollArea className="h-[300px] md:h-[400px] pr-4">
-              <div className="space-y-4">
-                {itemsToRender.map(({ lead, closer }) => (
-                  <div key={lead.id} className="space-y-2">
-                    {closer && (
-                      <CloserCard
-                        closer={closer}
-                        assignedLeadName={lead.customerName}
-                        allowInteractiveToggle={false}
-                      />
-                    )}
-                    <LeadCard lead={lead} context="in-process" />
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </>
-        ) : !isLoading ? (
+        {isLoading ? (
+          <div className="flex h-full items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : displayItems.length > 0 ? (
+          <ScrollArea className="h-[300px] md:h-[400px] pr-4">
+            <div className="space-y-4">
+              {displayItems.map(({ lead, closer }) => (
+                <div key={lead.id} className="space-y-2">
+                  {closer && (
+                    <CloserCard
+                      closer={closer}
+                      assignedLeadName={lead.customerName}
+                      allowInteractiveToggle={false} // Status managed by assignment, not direct toggle here
+                    />
+                  )}
+                  <LeadCard lead={lead} context="in-process" />
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        ) : (
            <div className="flex flex-col h-full items-center justify-center text-center">
             <Ghost className="h-12 w-12 text-muted-foreground mb-3" />
             <p className="text-lg font-medium text-muted-foreground">It's quiet... too quiet.</p>
             <p className="text-sm text-muted-foreground">No leads are currently in process.</p>
-          </div>
-        ) : (
-          // Still loading, show a loader
-          <div className="flex h-full items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         )}
       </CardContent>
     </Card>
   );
 }
-
-    
