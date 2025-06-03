@@ -1,11 +1,13 @@
+
 "use client";
 
+import Image from 'next/image';
+import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, Sun, UserCircle } from "lucide-react";
+import { LogOut, UserCircle } from "lucide-react";
 import AvailabilityToggle from "./availability-toggle";
-import Link from "next/link";
 
 export default function DashboardHeader() {
   const { user, logout } = useAuth();
@@ -13,15 +15,22 @@ export default function DashboardHeader() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 max-w-screen-2xl items-center">
-        <Link href="/dashboard" className="mr-6 flex items-center space-x-2">
-          <Sun className="h-6 w-6 text-primary" />
-          <span className="font-bold font-headline text-xl sm:inline-block">LeadFlow</span>
+        <Link href="/dashboard" className="mr-6 flex items-center">
+          <Image
+            src="https://placehold.co/160x40.png"
+            alt="Dynasty Logo"
+            width={160}
+            height={40}
+            className="h-10 object-contain" // Adjust height as needed, object-contain preserves aspect ratio
+            data-ai-hint="dynasty logo"
+            priority // Good to add for LCP elements like a logo
+          />
         </Link>
         <div className="flex flex-1 items-center justify-end space-x-4">
           {user?.role === "closer" && <AvailabilityToggle />}
           <div className="flex items-center space-x-2">
             <Avatar className="h-8 w-8">
-              <AvatarImage src={user?.displayName ? `https://ui-avatars.com/api/?name=${user.displayName}&background=random` : undefined} />
+              <AvatarImage src={user?.displayName ? `https://ui-avatars.com/api/?name=${user.displayName.replace(/\s+/g, '+')}&background=random` : undefined} />
               <AvatarFallback>
                 {user?.email ? user.email.substring(0, 2).toUpperCase() : <UserCircle size={20}/>}
               </AvatarFallback>
