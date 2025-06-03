@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, UserCircle, ClipboardList, PlusCircle, Loader2, History } from "lucide-react";
 import AvailabilityToggle from "./availability-toggle";
 import CreateLeadForm from "./create-lead-form"; 
-import { ThemeToggleButton } from "@/components/theme-toggle-button"; // Added import
+import { ThemeToggleButton } from "@/components/theme-toggle-button";
 import { useState } from "react";
 
 export default function DashboardHeader() {
@@ -35,7 +35,7 @@ export default function DashboardHeader() {
           </nav>
           <div className="flex items-center justify-end space-x-2 md:space-x-4"> {/* Adjusted spacing for smaller screens */}
             {(user?.role === 'setter' || user?.role === 'manager') && (
-              <Button onClick={() => setIsCreateLeadModalOpen(true)} variant="default" size="sm">
+              <Button onClick={() => setIsCreateLeadModalOpen(true)} variant="secondary" size="sm">
                 <PlusCircle className="mr-2 h-5 w-5" />
                 Create New Lead
               </Button>
@@ -53,7 +53,7 @@ export default function DashboardHeader() {
                 <span className="text-muted-foreground capitalize">{user?.role}</span>
               </div>
             </div>
-            <ThemeToggleButton /> {/* Added Theme Toggle Button */}
+            <ThemeToggleButton />
             <Button variant="ghost" size="icon" onClick={logout} aria-label="Logout">
               <LogOut className="h-6 w-6" />
             </Button>
