@@ -30,37 +30,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
 
   useEffect(() => {
-    console.log("[AuthProvider] Setting up onAuthStateChanged listener.");
     const unsubscribeAuth = onAuthStateChanged(auth, async (fbUser) => {
-      console.log("[AuthProvider] onAuthStateChanged triggered. Firebase user:", fbUser?.uid);
       setFirebaseUser(fbUser);
-      if (fbUser) {
-        // User is signed in
-      } else {
-        console.log("[AuthProvider] No Firebase user. Clearing AppUser.");
+      if (!fbUser) {
         setUser(null);
         setLoading(false);
       }
+      // If fbUser exists, the other useEffect will handle fetching AppUser
     });
-
-    return () => {
-      console.log("[AuthProvider] Cleaning up onAuthStateChanged listener.");
-      unsubscribeAuth();
-    }
+    return () => unsubscribeAuth();
   }, []);
 
   useEffect(() => {
     let unsubscribeUserDoc: (() => void) | undefined;
 
     if (firebaseUser) {
-      console.log(`[AuthProvider] Firebase user ${firebaseUser.uid} detected. Setting up snapshot for 'users' collection.`);
       setLoading(true);
       const userDocRef = doc(db, "users", firebaseUser.uid);
       
       unsubscribeUserDoc = onSnapshot(userDocRef, (docSnap) => {
         if (docSnap.exists()) {
           const appUserData = { uid: firebaseUser.uid, ...docSnap.data() } as AppUser;
-          console.log("[AuthProvider] User document snapshot received. Data:", appUserData);
           setUser(appUserData);
         } else {
           console.error("[AuthProvider] User document not found in 'users' collection for UID:", firebaseUser.uid);
@@ -73,13 +63,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setLoading(false);
       });
     } else {
-      console.log("[AuthProvider] No Firebase user. Clearing AppUser and ensuring loading is false.");
       setUser(null); 
       setLoading(false); 
     }
     return () => {
       if (unsubscribeUserDoc) {
-        console.log("[AuthProvider] Cleaning up user document snapshot listener.");
         unsubscribeUserDoc();
       }
     };
@@ -87,30 +75,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
   useEffect(() => {
-    console.log(`[AuthProvider] Auth state change: loading=${loading}, user=${!!user}, pathname=${pathname}`);
     if (!loading && !user && pathname !== "/login") {
-      console.log("[AuthProvider] Not loading, no user, not on login page. Redirecting to /login.");
       router.push("/login");
     }
     if (!loading && user && pathname === "/login") {
-      console.log("[AuthProvider] Not loading, user exists, on login page. Redirecting to /dashboard.");
       router.push("/dashboard");
     }
   }, [user, loading, router, pathname]);
 
   const logout = async () => {
-    console.log("[AuthProvider] logout called.");
     setLoading(true);
     await firebaseSignOut(auth);
     setUser(null);
     setFirebaseUser(null);
-    router.push("/login");
+    // router.push will be handled by the effect above
     setLoading(false);
-    console.log("[AuthProvider] logout complete.");
   };
   
-  if (loading && (pathname !== "/login" && !user)) {
-     console.log("[AuthProvider] Showing global loading spinner.");
+  // Avoid rendering children if loading and not on login page without a user
+  // This prevents a flash of content before redirect
+  if (loading && pathname !== "/login" && !user) {
      return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -119,7 +103,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
   
   const contextValue = { firebaseUser, user, loading, teamId: user?.teamId || null, role: user?.role || null, logout };
-  console.log("[AuthProvider] Current auth context value:", contextValue);
 
   return (
     <AuthContext.Provider value={contextValue}>

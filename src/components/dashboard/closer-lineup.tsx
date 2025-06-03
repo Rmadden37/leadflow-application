@@ -83,7 +83,7 @@ export default function CloserLineup() {
     const unsubscribeClosers = onSnapshot(
       closersCollectionQuery,
       (querySnapshot) => {
-        let allOnDutyClosers = querySnapshot.docs.map((doc) => {
+        const allOnDutyClosers = querySnapshot.docs.map((doc) => {
           const data = doc.data();
           return {
             uid: doc.id,
@@ -96,11 +96,6 @@ export default function CloserLineup() {
             lineupOrder: data.lineupOrder,
           } as Closer;
         });
-
-        // DEMO: Always hide Andrea Rovayo from lineup for demonstration
-        allOnDutyClosers = allOnDutyClosers.filter(
-          (closer) => closer.uid !== "tdItEd0KOLa4qWk4HV4AaCucZz82"
-        );
 
         const availableClosers = allOnDutyClosers.filter(
           (closer) => !inProcessLeadAssignedCloserIds.has(closer.uid)

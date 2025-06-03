@@ -9,43 +9,13 @@ import { collection, query, where, onSnapshot, orderBy, limit, Timestamp } from 
 import LeadCard from "./lead-card";
 import CloserCard from "./closer-card";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Activity, Loader2, Ghost, Info } from "lucide-react";
+import { Activity, Loader2, Ghost } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface InProcessDisplayItem {
   lead: Lead;
   closer?: Closer;
 }
-
-// --- DEMO DATA ---
-const DEMO_ANDREA_ROVAYO: Closer = {
-  uid: "tdItEd0KOLa4qWk4HV4AaCucZz82",
-  name: "Andrea Rovayo",
-  status: "On Duty", // Status for card display, actual status could be different in DB
-  teamId: "Empire", // Assuming a common teamId for demo
-  role: "closer",
-  avatarUrl: "https://imgur.com/fzF41qW.jpeg",
-  phone: "(786) 973-4134",
-  lineupOrder: 1, // Not directly relevant for this display
-};
-
-const DEMO_TONY_THE_TIGER_LEAD: Lead = {
-  id: "demo-lead-tony",
-  customerName: "Tony the Tiger",
-  customerPhone: "(555) GRR-EAT",
-  address: "Kellogg's HQ, Battle Creek, MI",
-  status: "in_process",
-  teamId: "Empire", // Assuming a common teamId for demo
-  dispatchType: "immediate",
-  assignedCloserId: "tdItEd0KOLa4qWk4HV4AaCucZz82",
-  assignedCloserName: "Andrea Rovayo",
-  createdAt: Timestamp.now(),
-  updatedAt: Timestamp.now(),
-  dispositionNotes: "He said they're GRRREAT!",
-  photoUrls: [],
-};
-// --- END DEMO DATA ---
 
 export default function InProcessLeads() {
   const { user } = useAuth();
@@ -131,26 +101,6 @@ export default function InProcessLeads() {
 
   const isLoading = loadingLeads || loadingClosers;
 
-  const renderDemoContent = () => (
-    <div className="space-y-4">
-      <Alert variant="default" className="mt-2">
-        <Info className="h-4 w-4" />
-        <AlertTitle className="font-semibold">Demonstration Mode</AlertTitle>
-        <AlertDescription className="text-xs">
-          This is a visual demonstration. Andrea Rovayo is shown working on "Tony the Tiger".
-          In a real scenario, this would reflect actual data from Firestore, Andrea would be removed from the "Closer Lineup",
-          and "Tony the Tiger" would be removed from the "Lead Queue".
-        </AlertDescription>
-      </Alert>
-      <CloserCard
-        closer={DEMO_ANDREA_ROVAYO}
-        assignedLeadName={DEMO_TONY_THE_TIGER_LEAD.customerName}
-        allowInteractiveToggle={false}
-      />
-      <LeadCard lead={DEMO_TONY_THE_TIGER_LEAD} context="in-process" />
-    </div>
-  );
-
   return (
     <Card className="h-full flex flex-col shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -165,7 +115,13 @@ export default function InProcessLeads() {
           <div className="flex h-full items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
-        ) : displayItems.length > 0 ? (
+        ) : displayItems.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center text-center">
+            <Ghost className="h-12 w-12 text-muted-foreground mb-3" />
+            <p className="text-muted-foreground font-medium">It's quiet... too quiet.</p>
+            <p className="text-sm text-muted-foreground">No leads are currently being processed.</p>
+          </div>
+        ) : (
           <ScrollArea className="h-[300px] md:h-[400px] pr-4">
             <div className="space-y-4">
               {displayItems.map(({ lead, closer }) => (
@@ -182,9 +138,6 @@ export default function InProcessLeads() {
               ))}
             </div>
           </ScrollArea>
-        ) : (
-          // Show demo content if no real "in_process" leads and not loading
-          renderDemoContent()
         )}
       </CardContent>
     </Card>
