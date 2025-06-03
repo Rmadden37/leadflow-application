@@ -10,11 +10,12 @@ import {
   XCircle,
   Ban,
   CalendarClock,
-  CreditCard, 
+  CreditCard,
   User,
   Phone,
-  Clock, // Changed from MoreHorizontal for scheduled time
-  ClipboardList
+  Clock,
+  ClipboardList,
+  MapPin // Added MapPin icon
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
@@ -41,7 +42,7 @@ const getStatusIcon = (status: Lead["status"]) => {
     case "rescheduled":
       return <CalendarClock className="h-5 w-5 text-purple-500" />;
     case "credit_fail":
-      return <CreditCard className="h-5 w-5 text-orange-500" />; 
+      return <CreditCard className="h-5 w-5 text-orange-500" />;
     case "waiting_assignment":
       return <ClipboardList className="h-5 w-5 text-gray-500" />;
     default:
@@ -51,7 +52,7 @@ const getStatusIcon = (status: Lead["status"]) => {
 
 const getStatusVariant = (status: Lead["status"]): "default" | "secondary" | "destructive" | "outline" => {
   switch (status) {
-    case "sold": return "default"; 
+    case "sold": return "default";
     case "in_process": return "secondary";
     case "no_sale":
     case "credit_fail":
@@ -72,8 +73,8 @@ export default function LeadCard({ lead, context = "in-process" }: LeadCardProps
   const canUpdateDisposition = user?.role === "closer" && lead.assignedCloserId === user.uid && context === "in-process";
 
   const timeAgo = lead.updatedAt ? formatDistanceToNow(lead.updatedAt.toDate(), { addSuffix: true }) : 'N/A';
-  const scheduledTimeDisplay = lead.status === 'rescheduled' && lead.scheduledAppointmentTime 
-    ? formatDate(lead.scheduledAppointmentTime.toDate(), "MMM d, p") 
+  const scheduledTimeDisplay = lead.status === 'rescheduled' && lead.scheduledAppointmentTime
+    ? formatDate(lead.scheduledAppointmentTime.toDate(), "MMM d, p")
     : null;
 
   return (
@@ -102,18 +103,40 @@ export default function LeadCard({ lead, context = "in-process" }: LeadCardProps
               <span>Assigned to: {lead.assignedCloserName}</span>
             </div>
           )}
-          {/* Display scheduled time if available and status is rescheduled */}
           {scheduledTimeDisplay && (
              <div className="flex items-center text-muted-foreground text-purple-600">
               <Clock className="mr-2 h-4 w-4" />
               <span>Scheduled: {scheduledTimeDisplay}</span>
             </div>
           )}
-           {/* Display assigned closer if in queue and assigned */}
            {context === "queue" && lead.assignedCloserName && lead.status === "waiting_assignment" && (
             <div className="flex items-center text-muted-foreground text-blue-600">
               <User className="mr-2 h-4 w-4" />
               <span>Previously with: {lead.assignedCloserName}</span>
+            </div>
+          )}
+          {user?.role === 'manager' && lead.setterName && (
+            <div className="flex items-center text-muted-foreground text-xs mt-1">
+              <User className="mr-2 h-3 w-3 text-gray-400" />
+              <span>Set by: {lead.setterName}</span>
+            </div>
+          )}
+          {user?.role === 'manager' && lead.setterLocation && (
+            <div className="flex items-center text-muted-foreground text-xs mt-1">
+              <MapPin className="mr-2 h-3 w-3 text-gray-400" />
+              <span>
+                Loc: {lead.setterLocation.latitude.toFixed(4)}, {lead.setterLocation.longitude.toFixed(4)}
+                {' '}
+                <a
+                  href={`https://www.google.com/maps?q=${lead.setterLocation.latitude},${lead.setterLocation.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                  aria-label="View location on map"
+                >
+                  (Map)
+                </a>
+              </span>
             </div>
           )}
         </CardContent>
