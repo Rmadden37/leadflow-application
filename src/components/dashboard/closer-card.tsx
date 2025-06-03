@@ -2,7 +2,7 @@
 "use client";
 
 import type { Closer } from "@/types";
-import { Card, CardContent } from "@/components/ui/card"; // Removed CardHeader, CardTitle as they are not used
+import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserCheck, UserX } from "lucide-react";
 
@@ -17,7 +17,7 @@ export default function CloserCard({ closer }: CloserCardProps) {
     <Card className="shadow-sm hover:shadow-md transition-shadow duration-200">
       <CardContent className="p-3">
         <div className="flex items-center space-x-3">
-          <Avatar className="h-10 w-10">
+          <Avatar className="h-12 w-12 border border-border">
             <AvatarImage src={closer.avatarUrl || `https://ui-avatars.com/api/?name=${closer.name.replace(/\s+/g, '+')}&background=random`} />
             <AvatarFallback>{closer.name ? closer.name.substring(0, 2).toUpperCase() : "N/A"}</AvatarFallback>
           </Avatar>
@@ -29,7 +29,7 @@ export default function CloserCard({ closer }: CloserCardProps) {
               ) : (
                 <UserX className="mr-1 h-4 w-4" />
               )}
-              {closer.status} {/* This will now display "On Duty" or "Off Duty" directly */}
+              {closer.status}
             </div>
           </div>
         </div>
