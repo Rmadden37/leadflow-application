@@ -52,34 +52,34 @@
   }
 
   .dark {
-    --background: 260 30% 10%; /* Deep dark purple-blue */
-    --foreground: 300 50% 90%; /* Light pinkish lavender */
+    --background: 220 10% 10%; /* Very Dark Grey/Almost Black */
+    --foreground: 220 10% 90%; /* Light Grey */
 
-    --muted: 260 30% 20%; /* Darker purple for muted */
-    --muted-foreground: 270 20% 60%; /* Grayish lavender for muted text */
+    --muted: 220 10% 20%; /* Darker Grey */
+    --muted-foreground: 220 10% 55%; /* Medium Grey */
 
-    --popover: 260 30% 10%; /* Same as background */
-    --popover-foreground: 300 50% 90%; /* Same as foreground */
+    --popover: 220 10% 12%; /* Slightly Lighter Dark Grey */
+    --popover-foreground: 220 10% 90%; /* Light Grey */
 
-    --card: 260 30% 15%; /* Slightly lighter dark purple-blue for cards */
-    --card-foreground: 300 50% 90%; /* Same as foreground */
+    --card: 220 10% 15%; /* Dark Grey for cards */
+    --card-foreground: 220 10% 90%; /* Light Grey */
 
-    --border: 260 30% 25%; /* Medium-dark purple for borders */
-    --input: 260 30% 25%; /* Same as border for input */
+    --border: 220 10% 25%; /* Medium-Dark Grey for borders */
+    --input: 220 10% 25%; /* Same as border for input */
 
-    --primary: 180 90% 55%; /* Bright Cyan */
-    --primary-foreground: 260 30% 5%; /* Very dark purple for text on cyan */
+    --primary: 210 40% 55%; /* Muted Cool Blue */
+    --primary-foreground: 0 0% 100%; /* White */
 
-    --secondary: 260 30% 30%; /* Medium purple for secondary */
-    --secondary-foreground: 270 50% 85%; /* Light lavender for secondary text */
+    --secondary: 220 10% 30%; /* Medium Grey for secondary */
+    --secondary-foreground: 220 10% 85%; /* Light-ish Grey */
 
-    --accent: 330 90% 60%; /* Hot Pink */
+    --accent: 180 30% 50%; /* Desaturated Teal */
     --accent-foreground: 0 0% 100%; /* White text on accent */
 
-    --destructive: 15 90% 55%; /* Bright Orange-Red */
+    --destructive: 0 70% 50%; /* Slightly less saturated red */
     --destructive-foreground: 0 0% 100%; /* White text on destructive */
 
-    --ring: 180 90% 55%; /* Bright Cyan for ring (same as new primary) */
+    --ring: 210 40% 55%; /* Muted Cool Blue for ring (same as new primary) */
 
     /* Chart colors remain as previously defined for dark mode, can be adjusted if needed */
     --chart-1: 220 70% 50%;
