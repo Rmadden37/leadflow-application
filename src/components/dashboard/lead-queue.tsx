@@ -2,10 +2,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { Lead } from "@/types";
+import type { Lead, Closer, UserRole } from "@/types";
 import { useAuth } from "@/hooks/use-auth";
 import { db } from "@/lib/firebase";
-import { collection, query, where, onSnapshot, orderBy, limit, writeBatch, doc, serverTimestamp, Timestamp } from "firebase/firestore";
+import { collection, query, where, onSnapshot, orderBy, limit, writeBatch, doc, serverTimestamp, Timestamp, getDocs } from "firebase/firestore";
 import LeadCard from "./lead-card";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,15 +20,90 @@ export default function LeadQueue() {
   const { toast } = useToast();
   const [waitingLeads, setWaitingLeads] = useState<Lead[]>([]);
   const [scheduledLeads, setScheduledLeads] = useState<Lead[]>([]);
+  const [onDutyClosers, setOnDutyClosers] = useState<Closer[]>([]);
   const [loadingWaiting, setLoadingWaiting] = useState(true);
   const [loadingScheduled, setLoadingScheduled] = useState(true);
-  const [processedLeadIds, setProcessedLeadIds] = useState<Set<string>>(new Set());
+  const [loadingClosers, setLoadingClosers] = useState(true);
+  const [processedLeadIds, setProcessedLeadIds] = useState<Set<string>>(new Set()); // For scheduled leads moving to waiting
+  const [assignedLeadIds, setAssignedLeadIds] = useState<Set<string>>(new Set()); // For leads processed for auto-assignment
 
 
+  // Effect to fetch on-duty closers
   useEffect(() => {
-    console.log("[LeadQueue - WaitingList] Hook triggered. User from useAuth:", user);
     if (!user || !user.teamId) {
-      console.log("[LeadQueue - WaitingList] No user or no user.teamId. Skipping query. User:", user);
+      setLoadingClosers(false);
+      setOnDutyClosers([]);
+      return;
+    }
+    setLoadingClosers(true);
+    const closersQuery = query(
+      collection(db, "closers"),
+      where("teamId", "==", user.teamId),
+      where("status", "==", "On Duty"),
+      orderBy("lineupOrder", "asc"),
+      orderBy("name", "asc")
+    );
+
+    const unsubscribeClosers = onSnapshot(closersQuery, (snapshot) => {
+      const closersData = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as Closer));
+      setOnDutyClosers(closersData);
+      setLoadingClosers(false);
+    }, (error) => {
+      console.error("[LeadQueue] Error fetching on-duty closers:", error);
+      setLoadingClosers(false);
+    });
+
+    return () => unsubscribeClosers();
+  }, [user]);
+
+
+  const attemptAutoAssignLead = useCallback(async (lead: Lead, currentClosers: Closer[]) => {
+    if (!user || !user.teamId || assignedLeadIds.has(lead.id) || lead.status !== "waiting_assignment") {
+      return;
+    }
+
+    console.log(`[LeadQueue] Attempting auto-assignment for lead: ${lead.id} (${lead.customerName})`);
+
+    if (currentClosers.length > 0) {
+      const nextCloser = currentClosers[0]; // Assign to the first in the lineupOrder
+      
+      console.log(`[LeadQueue] Assigning lead ${lead.id} to closer ${nextCloser.uid} (${nextCloser.name})`);
+
+      const batch = writeBatch(db);
+      const leadRef = doc(db, "leads", lead.id);
+
+      batch.update(leadRef, {
+        assignedCloserId: nextCloser.uid,
+        assignedCloserName: nextCloser.name,
+        status: "in_process",
+        updatedAt: serverTimestamp(),
+      });
+
+      try {
+        await batch.commit();
+        setAssignedLeadIds(prev => new Set(prev).add(lead.id));
+        toast({
+          title: "Lead Assigned",
+          description: `Lead "${lead.customerName}" automatically assigned to ${nextCloser.name}.`,
+        });
+        console.log(`[LeadQueue] Lead ${lead.id} successfully assigned to ${nextCloser.name}.`);
+      } catch (error) {
+        console.error(`[LeadQueue] Error auto-assigning lead ${lead.id}:`, error);
+        toast({
+          title: "Assignment Failed",
+          description: `Could not automatically assign lead "${lead.customerName}".`,
+          variant: "destructive",
+        });
+      }
+    } else {
+      console.log(`[LeadQueue] No on-duty closers available to assign lead ${lead.id}.`);
+    }
+  }, [user, toast, assignedLeadIds]);
+
+
+  // Effect for fetching and processing waiting_assignment leads
+  useEffect(() => {
+    if (!user || !user.teamId) {
       setLoadingWaiting(false);
       setWaitingLeads([]);
       return;
@@ -39,33 +114,39 @@ export default function LeadQueue() {
       collection(db, "leads"),
       where("teamId", "==", user.teamId),
       where("status", "==", "waiting_assignment"),
-      orderBy("createdAt", "asc"), 
-      limit(20)
+      orderBy("createdAt", "asc")
+      // Removed limit(20) to process all waiting leads for assignment
     );
-    console.log("[LeadQueue - WaitingList] Querying for waiting_assignment leads. Query:", qWaiting);
 
     const unsubscribeWaiting = onSnapshot(qWaiting, (querySnapshot) => {
-      console.log(`[LeadQueue - WaitingList] Snapshot received. Number of documents: ${querySnapshot.docs.length}`);
       const leadsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lead));
-      console.log("[LeadQueue - WaitingList] Mapped waitingLeadsData:", leadsData);
       setWaitingLeads(leadsData);
       setLoadingWaiting(false);
+
+      // Attempt to assign new waiting leads
+      if (onDutyClosers.length > 0) {
+        leadsData.forEach(lead => {
+          if (!assignedLeadIds.has(lead.id)) {
+            attemptAutoAssignLead(lead, onDutyClosers);
+          }
+        });
+      } else if (!loadingClosers && onDutyClosers.length === 0 && leadsData.length > 0 && !querySnapshot.metadata.hasPendingWrites) {
+         // Only log if closers have been loaded and there are none, and there are leads waiting.
+         console.log("[LeadQueue - WaitingList] No on-duty closers available to assign waiting leads.");
+      }
+
     }, (error) => {
       console.error("[LeadQueue - WaitingList] Error fetching waiting assignment leads:", error);
       setLoadingWaiting(false);
     });
 
-    return () => {
-      console.log("[LeadQueue - WaitingList] Cleaning up snapshot listener.");
-      unsubscribeWaiting()
-    };
-  }, [user]);
+    return () => unsubscribeWaiting();
+  }, [user, onDutyClosers, attemptAutoAssignLead, assignedLeadIds, loadingClosers]);
+
 
   // Effect for fetching scheduled leads and processing them
   useEffect(() => {
-    console.log("[LeadQueue - ScheduledList] Hook triggered. User from useAuth:", user);
     if (!user || !user.teamId) {
-      console.log("[LeadQueue - ScheduledList] No user or no user.teamId. Skipping query. User:", user);
       setLoadingScheduled(false);
       setScheduledLeads([]);
       return;
@@ -78,58 +159,55 @@ export default function LeadQueue() {
       where("status", "in", ["rescheduled", "scheduled"]), 
       orderBy("scheduledAppointmentTime", "asc") 
     );
-    console.log("[LeadQueue - ScheduledList] Querying for rescheduled and scheduled leads. Query:", qScheduled);
-
 
     const unsubscribeScheduled = onSnapshot(qScheduled, async (querySnapshot) => {
-      console.log(`[LeadQueue - ScheduledList] Snapshot received. Number of documents: ${querySnapshot.docs.length}`);
       const leadsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lead));
-      console.log("[LeadQueue - ScheduledList] Mapped scheduledLeadsData:", leadsData);
-      setScheduledLeads(leadsData);
+      setScheduledLeads(leadsData); // Update the displayed list of scheduled leads
       setLoadingScheduled(false);
 
       const now = new Date();
       const leadsToMoveBatch = writeBatch(db);
-      let movedCount = 0;
-      console.log(`[LeadQueue - ScheduledList] Processing ${leadsData.length} scheduled/rescheduled leads at ${now.toISOString()}`);
+      const leadsReadyForAssignment: Lead[] = [];
 
-      leadsData.forEach(lead => {
+      querySnapshot.docs.forEach(docSnapshot => {
+        const lead = { id: docSnapshot.id, ...docSnapshot.data() } as Lead;
         if (lead.scheduledAppointmentTime && (lead.status === "rescheduled" || lead.status === "scheduled") && !processedLeadIds.has(lead.id)) {
           const appointmentTime = lead.scheduledAppointmentTime.toDate();
           const timeUntilAppointment = appointmentTime.getTime() - now.getTime();
           
-          console.log(`[LeadQueue - ScheduledList] Lead ID: ${lead.id}, Status: ${lead.status}, Appt Time: ${appointmentTime.toISOString()}, Time Until: ${timeUntilAppointment}ms`);
-
           if (timeUntilAppointment <= FORTY_FIVE_MINUTES_MS) {
-            console.log(`[LeadQueue - ScheduledList] Moving lead ID: ${lead.id} to waiting_assignment. Original closer ID: ${lead.assignedCloserId}, Name: ${lead.assignedCloserName}`);
             const leadRef = doc(db, "leads", lead.id);
             leadsToMoveBatch.update(leadRef, {
               status: "waiting_assignment", 
               updatedAt: serverTimestamp(),
-              // IMPORTANT: Do NOT clear assignedCloserId and assignedCloserName here.
-              // They are preserved to show "Prev. Closer" if applicable.
-              // scheduledAppointmentTime remains, as the lead is no longer in 'scheduled' status,
-              // so it won't show in the "Scheduled" tab.
             });
-            movedCount++;
+            // Prepare this lead for potential auto-assignment after status update
+            leadsReadyForAssignment.push({...lead, status: "waiting_assignment"}); 
             setProcessedLeadIds(prev => new Set(prev).add(lead.id)); 
           }
-        } else if (processedLeadIds.has(lead.id)) {
-            console.log(`[LeadQueue - ScheduledList] Lead ID: ${lead.id} was already processed for moving by this client session.`);
-        } else if (!lead.scheduledAppointmentTime && (lead.status === "rescheduled" || lead.status === "scheduled")) {
-            console.warn(`[LeadQueue - ScheduledList] Lead ID: ${lead.id} has '${lead.status}' status but no scheduledAppointmentTime.`);
         }
       });
 
-      if (movedCount > 0) {
-        console.log(`[LeadQueue - ScheduledList] Committing batch to move ${movedCount} lead(s).`);
+      if (leadsReadyForAssignment.length > 0) {
         try {
           await leadsToMoveBatch.commit();
           toast({
             title: "Leads Updated",
-            description: `${movedCount} scheduled lead(s) moved to waiting list.`,
+            description: `${leadsReadyForAssignment.length} scheduled lead(s) moved to waiting list.`,
           });
-          console.log(`[LeadQueue - ScheduledList] Successfully moved ${movedCount} lead(s).`);
+          
+          // Now attempt to assign these newly 'waiting_assignment' leads
+          if (onDutyClosers.length > 0) {
+            leadsReadyForAssignment.forEach(leadToAssign => {
+               // Check assignedLeadIds again, as it might have been processed by the other effect if timing was very close
+              if (!assignedLeadIds.has(leadToAssign.id)) {
+                attemptAutoAssignLead(leadToAssign, onDutyClosers);
+              }
+            });
+          } else if (!loadingClosers) {
+            console.log("[LeadQueue - ScheduledList] No on-duty closers available for leads moved from scheduled.");
+          }
+
         } catch (error) {
           console.error("[LeadQueue - ScheduledList] Error moving scheduled leads:", error);
           toast({
@@ -137,9 +215,7 @@ export default function LeadQueue() {
             description: "Could not move scheduled leads automatically.",
             variant: "destructive",
           });
-          const failedLeadIds = leadsData
-            .filter(lead => lead.scheduledAppointmentTime && (lead.status === "rescheduled" || lead.status === "scheduled") && (lead.scheduledAppointmentTime.toDate().getTime() - now.getTime() <= FORTY_FIVE_MINUTES_MS))
-            .map(lead => lead.id);
+          const failedLeadIds = leadsReadyForAssignment.map(l => l.id);
           setProcessedLeadIds(prev => {
             const newSet = new Set(prev);
             failedLeadIds.forEach(id => newSet.delete(id));
@@ -152,11 +228,8 @@ export default function LeadQueue() {
       setLoadingScheduled(false);
     });
     
-    return () => {
-      console.log("[LeadQueue - ScheduledList] Cleaning up snapshot listener.");
-      unsubscribeScheduled();
-    }
-  }, [user, toast, processedLeadIds]);
+    return () => unsubscribeScheduled();
+  }, [user, toast, processedLeadIds, onDutyClosers, attemptAutoAssignLead, assignedLeadIds, loadingClosers]);
 
 
   return (
@@ -166,7 +239,7 @@ export default function LeadQueue() {
           <ListChecks className="mr-2 h-7 w-7 text-primary" />
           Lead Queues
         </CardTitle>
-        {(loadingWaiting || loadingScheduled) && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
+        {(loadingWaiting || loadingScheduled || loadingClosers) && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden">
         <Tabs defaultValue="waiting" className="flex flex-col h-full">
@@ -183,15 +256,17 @@ export default function LeadQueue() {
               <div className="flex h-full items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : waitingLeads.length === 0 ? (
+            ) : waitingLeads.filter(lead => lead.status === "waiting_assignment" && !assignedLeadIds.has(lead.id)).length === 0 ? (
               <div className="flex h-full items-center justify-center">
-                <p className="text-muted-foreground">No leads waiting</p>
+                <p className="text-muted-foreground">No leads currently waiting for assignment.</p>
               </div>
             ) : (
               <ScrollArea className="h-[280px] md:h-[380px] pr-4">
                 <div className="space-y-4">
-                  {waitingLeads.map(lead => (
-                    <LeadCard key={lead.id} lead={lead} context="queue-waiting" />
+                  {waitingLeads
+                    .filter(lead => lead.status === "waiting_assignment" && !assignedLeadIds.has(lead.id))
+                    .map(lead => (
+                      <LeadCard key={lead.id} lead={lead} context="queue-waiting" />
                   ))}
                 </div>
               </ScrollArea>
@@ -221,3 +296,4 @@ export default function LeadQueue() {
     </Card>
   );
 }
+
