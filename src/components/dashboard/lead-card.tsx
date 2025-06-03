@@ -11,14 +11,14 @@ import {
   Ban,
   CalendarClock,
   CreditCard,
-  User,
+  User as UserIcon, // Renamed to avoid conflict with useAuth's User
   Phone,
   Clock,
   ClipboardList,
   MapPin,
-  Mail, // Using Mail for address, generic enough
-  Image as ImageIcon, // For photo indication
-  Zap, // For dispatch type
+  Mail, 
+  Image as ImageIcon, 
+  Zap, 
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
@@ -29,7 +29,7 @@ import { formatDistanceToNow, format as formatDate } from 'date-fns';
 
 interface LeadCardProps {
   lead: Lead;
-  context?: "in-process" | "queue" | "all-leads"; // Added "all-leads" context
+  context?: "in-process" | "queue" | "all-leads"; 
 }
 
 const getStatusIcon = (status: Lead["status"]) => {
@@ -72,7 +72,7 @@ const getStatusVariant = (status: Lead["status"]): "default" | "secondary" | "de
 
 
 export default function LeadCard({ lead, context = "in-process" }: LeadCardProps) {
-  const { user } = useAuth();
+  const { user } = useAuth(); // `user` here is AppUser from `users` collection
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const canUpdateDisposition = user?.role === "closer" && lead.assignedCloserId === user.uid && lead.status === "in_process";
@@ -88,11 +88,18 @@ export default function LeadCard({ lead, context = "in-process" }: LeadCardProps
       <Card className="shadow-md hover:shadow-lg transition-shadow duration-200 flex flex-col dark:bg-black/[.15] dark:border-white/[.08]">
         <CardHeader className="pb-3 pt-4 px-4">
           <div className="flex justify-between items-start">
-            <div>
-              <CardTitle className="text-base font-semibold font-headline">{lead.customerName}</CardTitle>
-              <CardDescription className="text-xs text-muted-foreground">Created {timeCreatedAgo}</CardDescription>
+            <div className="flex items-center"> {/* Flex container for icon and title */}
+              <UserIcon className="mr-2 h-5 w-5 text-primary flex-shrink-0" /> {/* Person icon */}
+              <div>
+                <CardTitle className="text-base font-semibold font-headline text-left"> {/* Ensure text-left for the title if it's now in a flex item */}
+                  {lead.customerName}
+                </CardTitle>
+                <CardDescription className="text-xs text-muted-foreground text-left"> {/* Ensure text-left for description */}
+                  Created {timeCreatedAgo}
+                </CardDescription>
+              </div>
             </div>
-            <Badge variant={getStatusVariant(lead.status)} className="capitalize text-xs flex items-center gap-1 whitespace-nowrap">
+            <Badge variant={getStatusVariant(lead.status)} className="capitalize text-xs flex items-center gap-1 whitespace-nowrap ml-2"> {/* Added ml-2 for spacing */}
               {getStatusIcon(lead.status)}
               {lead.status.replace("_", " ")}
             </Badge>
@@ -116,7 +123,7 @@ export default function LeadCard({ lead, context = "in-process" }: LeadCardProps
 
           {(context === "in-process" || context === "all-leads") && lead.assignedCloserName && (
             <div className="flex items-center text-muted-foreground">
-              <User className="mr-2 h-4 w-4 flex-shrink-0" />
+              <UserIcon className="mr-2 h-4 w-4 flex-shrink-0" />
               <span>Assigned: {lead.assignedCloserName}</span>
             </div>
           )}
@@ -128,13 +135,13 @@ export default function LeadCard({ lead, context = "in-process" }: LeadCardProps
           )}
            {(context === "queue" || context === "all-leads") && lead.assignedCloserName && lead.status === "waiting_assignment" && (
             <div className="flex items-center text-muted-foreground text-blue-600">
-              <User className="mr-2 h-4 w-4 flex-shrink-0" />
+              <UserIcon className="mr-2 h-4 w-4 flex-shrink-0" />
               <span>Prev. Closer: {lead.assignedCloserName}</span>
             </div>
           )}
           {user?.role === 'manager' && lead.setterName && (
             <div className="flex items-center text-muted-foreground text-xs mt-1">
-              <User className="mr-2 h-3 w-3 text-gray-400 flex-shrink-0" />
+              <UserIcon className="mr-2 h-3 w-3 text-gray-400 flex-shrink-0" />
               <span>Set by: {lead.setterName}</span>
             </div>
           )}
@@ -181,3 +188,5 @@ export default function LeadCard({ lead, context = "in-process" }: LeadCardProps
     </>
   );
 }
+
+    
