@@ -28,6 +28,7 @@ import { GeoPoint, addDoc, collection, serverTimestamp } from "firebase/firestor
 import { useState } from "react";
 import { Loader2, MapPin } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { Label } from "@/components/ui/label"; // Added Label import
 
 const formSchema = z.object({
   customerName: z.string().min(2, { message: "Customer name must be at least 2 characters." }),
@@ -69,6 +70,12 @@ export default function CreateLeadForm({ isOpen, onClose }: CreateLeadFormProps)
   };
 
   const fetchLocation = () => {
+    if (user?.role !== 'setter') {
+      setLocationError("Location capture is only available for setters.");
+      toast({ title: "Location Capture Not Available", description: "Only users with the 'setter' role can capture location.", variant: "destructive" });
+      return;
+    }
+
     if (!navigator.geolocation) {
       setLocationError("Geolocation is not supported by your browser.");
       return;
@@ -124,7 +131,8 @@ export default function CreateLeadForm({ isOpen, onClose }: CreateLeadFormProps)
     setIsSubmitting(true);
 
     let setterLocationData: GeoPoint | null = null;
-    if (coordinates) {
+    // Only capture location if user is a setter and coordinates exist
+    if (user.role === 'setter' && coordinates) {
       setterLocationData = new GeoPoint(coordinates.latitude, coordinates.longitude);
     }
 
@@ -134,9 +142,9 @@ export default function CreateLeadForm({ isOpen, onClose }: CreateLeadFormProps)
         customerPhone: values.customerPhone,
         status: "waiting_assignment",
         teamId: user.teamId,
-        setterId: user.uid,
-        setterName: user.displayName || user.email,
-        setterLocation: setterLocationData, // Will be null if not captured
+        setterId: user.uid, // UID of the user creating the lead
+        setterName: user.displayName || user.email, // Display name of the user creating the lead
+        setterLocation: setterLocationData, // GeoPoint if setter, null otherwise
         assignedCloserId: null,
         assignedCloserName: null,
         createdAt: serverTimestamp(),
@@ -164,13 +172,15 @@ export default function CreateLeadForm({ isOpen, onClose }: CreateLeadFormProps)
 
   if (!isOpen) return null;
 
+  const canCaptureLocation = user?.role === 'setter';
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="font-headline text-xl">Create New Lead</DialogTitle>
           <DialogDescription>
-            Enter the customer's details. Location will be captured if permission is granted.
+            Enter the customer's details. Location will be captured if permission is granted (setters only).
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -203,13 +213,15 @@ export default function CreateLeadForm({ isOpen, onClose }: CreateLeadFormProps)
             />
 
             <div className="space-y-2">
-              <Label>Setter Location</Label>
+              <Label htmlFor="capture-location-button">Setter Location {canCaptureLocation ? "" : "(Setters Only)"}</Label>
               <Button
+                id="capture-location-button"
                 type="button"
                 variant="outline"
                 onClick={fetchLocation}
-                disabled={isFetchingLocation}
+                disabled={isFetchingLocation || !canCaptureLocation}
                 className="w-full"
+                aria-describedby={!canCaptureLocation ? "location-disabled-description" : undefined}
               >
                 {isFetchingLocation ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -218,7 +230,12 @@ export default function CreateLeadForm({ isOpen, onClose }: CreateLeadFormProps)
                 )}
                 {coordinates ? "Recapture Location" : "Capture Current Location"}
               </Button>
-              {coordinates && (
+              {!canCaptureLocation && (
+                <p id="location-disabled-description" className="text-xs text-muted-foreground">
+                  Location capture is only enabled for users with the 'setter' role.
+                </p>
+              )}
+              {coordinates && canCaptureLocation && (
                 <p className="text-xs text-green-600">
                   Location captured: {coordinates.latitude.toFixed(4)}, {coordinates.longitude.toFixed(4)}
                 </p>
@@ -232,7 +249,7 @@ export default function CreateLeadForm({ isOpen, onClose }: CreateLeadFormProps)
               <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting || isFetchingLocation}>
+              <Button type="submit" disabled={isSubmitting || (isFetchingLocation && canCaptureLocation) }>
                 {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Create Lead"}
               </Button>
             </DialogFooter>
