@@ -59,7 +59,8 @@ export default function CloserLineup() {
 
     // Wait until the assigned closer IDs are loaded before fetching/filtering closers
     if (loadingLeads) {
-        // setLoadingClosers(true); // Keep loading true if leads are still loading
+        // Data for filtering isn't ready yet.
+        // The `isLoading` computed variable handles the overall loading state.
         return;
     }
 
@@ -107,11 +108,12 @@ export default function CloserLineup() {
       setLoadingClosers(false);
     }, (error) => {
       console.error("[CloserLineup] Error fetching closer lineup:", error);
+      setClosers([]);
       setLoadingClosers(false);
     });
 
     return () => unsubscribeClosers();
-  }, [user, inProcessLeadAssignedCloserIds, loadingLeads]); // Re-run if user, assigned closer IDs, or lead loading state changes
+  }, [user, user?.teamId, inProcessLeadAssignedCloserIds, loadingLeads]); // Re-run if user, teamId, assigned closer IDs, or lead loading state changes
 
   const isLoading = loadingClosers || loadingLeads;
 
