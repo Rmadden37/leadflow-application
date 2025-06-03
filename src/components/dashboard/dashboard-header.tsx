@@ -5,11 +5,20 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, UserCircle, ClipboardList } from "lucide-react";
+import { LogOut, UserCircle, ClipboardList, PlusCircle } from "lucide-react";
 import AvailabilityToggle from "./availability-toggle";
 
 export default function DashboardHeader() {
   const { user, logout } = useAuth();
+
+  const handleCreateNewLead = () => {
+    // TODO: Implement lead creation functionality
+    console.log("Create New Lead button clicked - functionality to be implemented.");
+    // For now, we can use a toast to indicate it's not yet implemented
+    // import { useToast } from "@/hooks/use-toast"; // if you decide to use toast
+    // const { toast } = useToast();
+    // toast({ title: "Coming Soon!", description: "Lead creation functionality is under development." });
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -19,6 +28,10 @@ export default function DashboardHeader() {
           <span className="text-2xl font-bold font-headline">LeadFlow</span>
         </Link>
         <div className="flex flex-1 items-center justify-end space-x-4">
+          <Button onClick={handleCreateNewLead} variant="default" size="sm">
+            <PlusCircle className="mr-2 h-5 w-5" />
+            Create New Lead
+          </Button>
           {user?.role === "closer" && <AvailabilityToggle />}
           <div className="flex items-center space-x-2">
             <Avatar className="h-10 w-10 border border-border">
