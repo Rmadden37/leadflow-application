@@ -15,7 +15,7 @@ import {
   Phone,
   Clock,
   ClipboardList,
-  MapPin // Added MapPin icon
+  MapPin
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
@@ -72,7 +72,7 @@ export default function LeadCard({ lead, context = "in-process" }: LeadCardProps
 
   const canUpdateDisposition = user?.role === "closer" && lead.assignedCloserId === user.uid && context === "in-process";
 
-  const timeAgo = lead.updatedAt ? formatDistanceToNow(lead.updatedAt.toDate(), { addSuffix: true }) : 'N/A';
+  const timeCreatedAgo = lead.createdAt ? formatDistanceToNow(lead.createdAt.toDate(), { addSuffix: true }) : 'N/A';
   const scheduledTimeDisplay = lead.status === 'rescheduled' && lead.scheduledAppointmentTime
     ? formatDate(lead.scheduledAppointmentTime.toDate(), "MMM d, p")
     : null;
@@ -84,7 +84,7 @@ export default function LeadCard({ lead, context = "in-process" }: LeadCardProps
           <div className="flex justify-between items-start">
             <div>
               <CardTitle className="text-base font-semibold font-headline">{lead.customerName}</CardTitle>
-              <CardDescription className="text-xs text-muted-foreground">Updated {timeAgo}</CardDescription>
+              <CardDescription className="text-xs text-muted-foreground">Created {timeCreatedAgo}</CardDescription>
             </div>
             <Badge variant={getStatusVariant(lead.status)} className="capitalize text-xs flex items-center gap-1">
               {getStatusIcon(lead.status)}
