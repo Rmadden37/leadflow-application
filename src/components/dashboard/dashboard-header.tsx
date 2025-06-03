@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, UserCircle, ClipboardList, PlusCircle, History } from "lucide-react";
+import { LogOut, UserCircle, ClipboardList, PlusCircle } from "lucide-react";
 import AvailabilityToggle from "./availability-toggle";
 import CreateLeadForm from "./create-lead-form";
 import { ThemeToggleButton } from "@/components/theme-toggle-button";
@@ -24,14 +24,7 @@ export default function DashboardHeader() {
             <span className="text-2xl font-bold font-headline">LeadFlow</span>
           </Link>
           <nav className="flex items-center space-x-2 mr-auto">
-             {user?.role === 'manager' && (
-                <Button asChild variant="ghost" size="sm">
-                  <Link href="/dashboard/all-leads">
-                    <History className="mr-2 h-5 w-5" />
-                    All Leads
-                  </Link>
-                </Button>
-            )}
+            {/* "All Leads" link removed from here */}
           </nav>
           <div className="flex items-center justify-end space-x-2 md:space-x-4"> {/* Adjusted spacing for smaller screens */}
             {(user?.role === 'setter' || user?.role === 'manager') && (

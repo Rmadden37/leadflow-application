@@ -1,6 +1,7 @@
 
 "use client";
 
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,8 @@ import { auth, db } from "@/lib/firebase";
 import { updateProfile, sendPasswordResetEmail } from "firebase/auth";
 import { doc, updateDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, User, Mail, ShieldCheck, Edit3, KeyRound } from "lucide-react";
+import { Loader2, User, Mail, ShieldCheck, Edit3, KeyRound, History, ExternalLink } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 const profileFormSchema = z.object({
   displayName: z.string().min(2, { message: "Display name must be at least 2 characters." }).max(50, { message: "Display name cannot exceed 50 characters." }),
@@ -48,14 +50,10 @@ export default function ProfilePage() {
     }
     setIsUpdatingProfile(true);
     try {
-      // 1. Update Firebase Auth profile
       await updateProfile(firebaseUser, { displayName: values.displayName });
-
-      // 2. Update 'users' collection in Firestore
       const userDocRef = doc(db, "users", user.uid);
       await updateDoc(userDocRef, { displayName: values.displayName });
 
-      // 3. If user is a closer, update 'name' in 'closers' collection
       if (user.role === "closer") {
         const closerDocRef = doc(db, "closers", user.uid);
         await updateDoc(closerDocRef, { name: values.displayName });
@@ -65,11 +63,7 @@ export default function ProfilePage() {
         title: "Profile Updated",
         description: "Your display name has been successfully updated.",
       });
-       // The useAuth hook will eventually reflect the change from Firestore,
-       // causing a re-render. For immediate UI update in the form:
       form.reset({ displayName: values.displayName });
-
-
     } catch (error: any) {
       console.error("Error updating profile:", error);
       toast({
@@ -94,7 +88,6 @@ export default function ProfilePage() {
         title: "Password Reset Email Sent",
         description: "Check your inbox for a password reset link. You will be logged out.",
       });
-      // Log out the user after sending the email for security
       setTimeout(async () => {
         await logout();
       }, 3000);
@@ -119,7 +112,6 @@ export default function ProfilePage() {
   }
 
   if (!user) {
-     // This should be handled by AuthProvider redirect, but as a fallback
     return (
         <div className="flex min-h-[calc(100vh-var(--header-height,4rem))] items-center justify-center">
              <p className="text-destructive">User not found. Please log in again.</p>
@@ -175,8 +167,30 @@ export default function ProfilePage() {
               </Button>
             </form>
           </Form>
+
+          {user.role === 'manager' && (
+            <>
+              <Separator className="my-6" />
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium font-headline flex items-center">
+                  <History className="mr-2 h-5 w-5 text-primary"/>
+                  Manager Tools
+                </h3>
+                <Button asChild variant="outline" className="w-full sm:w-auto justify-start">
+                  <Link href="/dashboard/all-leads">
+                    View All Team Leads
+                    <ExternalLink className="ml-auto h-4 w-4 opacity-70" />
+                  </Link>
+                </Button>
+                 <p className="text-sm text-muted-foreground">
+                    Access a comprehensive list of all leads submitted by your team.
+                  </p>
+              </div>
+            </>
+          )}
+
         </CardContent>
-        <CardFooter className="flex-col items-start space-y-4 border-t pt-6">
+        <CardFooter className="flex-col items-start space-y-4 border-t pt-6 mt-6">
             <div>
                 <h3 className="text-lg font-medium font-headline flex items-center">
                     <KeyRound className="mr-2 h-5 w-5 text-primary"/>
