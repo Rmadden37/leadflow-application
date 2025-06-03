@@ -35,10 +35,10 @@ export default function ManageClosersModal({ isOpen, onClose }: ManageClosersMod
     }
 
     setLoading(true);
+    // Query for ALL closers in the team, ordered by name.
     const q = query(
       collection(db, "closers"),
       where("teamId", "==", user.teamId),
-      // Removed: where("status", "==", "Off Duty") to fetch all closers
       orderBy("name", "asc")
     );
 
