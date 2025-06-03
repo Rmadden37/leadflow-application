@@ -1,12 +1,11 @@
 
 "use client";
 
-import Image from 'next/image';
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, UserCircle } from "lucide-react";
+import { LogOut, UserCircle, ClipboardList } from "lucide-react";
 import AvailabilityToggle from "./availability-toggle";
 
 export default function DashboardHeader() {
@@ -15,16 +14,9 @@ export default function DashboardHeader() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 max-w-screen-2xl items-center">
-        <Link href="/dashboard" className="mr-6 flex items-center">
-          <Image
-            src="https://placehold.co/160x40.png"
-            alt="LeadFlow Logo"
-            width={160}
-            height={40}
-            className="h-10 object-contain"
-            data-ai-hint="company logo"
-            priority
-          />
+        <Link href="/dashboard" className="mr-6 flex items-center space-x-2 text-primary">
+          <ClipboardList className="h-7 w-7" />
+          <span className="text-2xl font-bold font-headline">LeadFlow</span>
         </Link>
         <div className="flex flex-1 items-center justify-end space-x-4">
           {user?.role === "closer" && <AvailabilityToggle />}
