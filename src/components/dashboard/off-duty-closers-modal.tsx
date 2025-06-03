@@ -38,15 +38,15 @@ export default function ManageClosersModal({ isOpen, onClose }: ManageClosersMod
     }
 
     setLoading(true);
+    // Fetch closers ordered by name initially. lineupOrder will be handled client-side.
     const q = query(
       collection(db, "closers"),
       where("teamId", "==", user.teamId),
-      orderBy("lineupOrder", "asc"),
-      orderBy("name", "asc") // Secondary sort by name
+      orderBy("name", "asc") // Primary sort by name from DB
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const closersData = querySnapshot.docs.map((docSnapshot, index) => {
+      let closersData = querySnapshot.docs.map((docSnapshot) => {
         const data = docSnapshot.data();
         return {
           uid: docSnapshot.id,
@@ -56,12 +56,27 @@ export default function ManageClosersModal({ isOpen, onClose }: ManageClosersMod
           role: data.role as UserRole,
           avatarUrl: data.avatarUrl,
           phone: data.phone,
-          // Use existing lineupOrder or default to a value based on current sort order if missing
-          lineupOrder: typeof data.lineupOrder === 'number' ? data.lineupOrder : index * 1000,
-        } as Closer;
+          lineupOrder: data.lineupOrder, // This might be undefined
+        } as Closer; // Closer type has lineupOrder as optional
       });
-      // Client-side sort to ensure stable order for UI, especially if lineupOrder was just defaulted
-      closersData.sort((a, b) => (a.lineupOrder ?? Infinity) - (b.lineupOrder ?? Infinity) || a.name.localeCompare(b.name));
+
+      // Client-side defaulting of lineupOrder and then sort
+      closersData = closersData.map((closer, index) => ({
+        ...closer,
+        // Assign a default lineupOrder if it's not a number (i.e., missing or invalid)
+        // Use a large multiplier for initial index-based order derived from name sort
+        lineupOrder: typeof closer.lineupOrder === 'number' ? closer.lineupOrder : (index + 1) * 100000,
+      }));
+
+      closersData.sort((a, b) => {
+        const orderA = a.lineupOrder!; // Should be a number after defaulting
+        const orderB = b.lineupOrder!;
+        if (orderA !== orderB) {
+          return orderA - orderB;
+        }
+        return a.name.localeCompare(b.name); // Fallback to name if orders are identical
+      });
+
       setClosers(closersData);
       setLoading(false);
     }, (error) => {
@@ -90,8 +105,6 @@ export default function ManageClosersModal({ isOpen, onClose }: ManageClosersMod
     }
 
     if (otherIndex === -1) {
-      // This case should be prevented by disabled buttons, but as a safeguard:
-      // toast({ title: "Cannot Move", description: "Closer is already at the top/bottom.", variant: "default" });
       setIsUpdatingOrder(false);
       return;
     }
@@ -101,15 +114,11 @@ export default function ManageClosersModal({ isOpen, onClose }: ManageClosersMod
 
     const batch = writeBatch(db);
 
-    // Ensure lineupOrder is a number. Use current index * 1000 as a fallback if undefined.
-    // This helps initialize order for items that might not have had one.
-    const orderToMove = typeof closerToMove.lineupOrder === 'number' ? closerToMove.lineupOrder : currentIndex * 1000;
-    const orderOther = typeof otherCloser.lineupOrder === 'number' ? otherCloser.lineupOrder : otherIndex * 1000;
+    // lineupOrder should be present due to client-side defaulting.
+    // If for some reason it's not, this would be an issue, but the defaulting logic aims to prevent that.
+    const orderToMove = closerToMove.lineupOrder!;
+    const orderOther = otherCloser.lineupOrder!;
     
-    // If the orders are identical (e.g. both were just defaulted), differentiate them slightly.
-    // This scenario is less likely if defaulting strategy is index-based and unique.
-    // For simplicity, we directly swap the determined orders.
-
     const closerToMoveRef = doc(db, "closers", closerToMove.uid);
     batch.update(closerToMoveRef, { lineupOrder: orderOther });
 
@@ -119,6 +128,7 @@ export default function ManageClosersModal({ isOpen, onClose }: ManageClosersMod
     try {
       await batch.commit();
       toast({ title: "Lineup Updated", description: `${closerToMove.name} moved.` });
+      // The onSnapshot listener will automatically update the UI with new order
     } catch (error) {
       console.error("Error updating lineup order:", error);
       toast({ title: "Update Failed", description: "Could not update lineup order.", variant: "destructive" });

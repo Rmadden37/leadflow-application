@@ -25,16 +25,16 @@ export default function CloserLineup() {
 
     setLoading(true);
 
+    // Fetch on-duty closers ordered by name initially. lineupOrder will be handled client-side.
     const q = query(
       collection(db, "closers"),
       where("teamId", "==", user.teamId),
       where("status", "==", "On Duty"),
-      orderBy("lineupOrder", "asc"), // Primary sort by custom order
-      orderBy("name", "asc")         // Secondary sort by name
+      orderBy("name", "asc") // Primary sort by name from DB
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const closersData = querySnapshot.docs.map(doc => {
+      let closersData = querySnapshot.docs.map(doc => {
         const data = doc.data();
         return {
           uid: doc.id,
@@ -44,9 +44,26 @@ export default function CloserLineup() {
           role: data.role as UserRole,
           avatarUrl: data.avatarUrl,
           phone: data.phone,
-          lineupOrder: data.lineupOrder, // Include lineupOrder
+          lineupOrder: data.lineupOrder, // This might be undefined
         } as Closer;
       });
+
+      // Client-side defaulting of lineupOrder and then sort
+      closersData = closersData.map((closer, index) => ({
+        ...closer,
+        // Assign a default lineupOrder if it's not a number
+        lineupOrder: typeof closer.lineupOrder === 'number' ? closer.lineupOrder : (index + 1) * 100000,
+      }));
+
+      closersData.sort((a, b) => {
+        const orderA = a.lineupOrder!; // Should be a number after defaulting
+        const orderB = b.lineupOrder!;
+        if (orderA !== orderB) {
+          return orderA - orderB;
+        }
+        return a.name.localeCompare(b.name); // Fallback to name if orders are identical
+      });
+      
       setClosers(closersData);
       setLoading(false);
     }, (error) => {
