@@ -1,5 +1,5 @@
 
-import type { Timestamp } from 'firebase/firestore';
+import type { Timestamp, GeoPoint } from 'firebase/firestore';
 
 export type UserRole = "setter" | "closer" | "manager";
 
@@ -35,6 +35,10 @@ export interface Lead {
   updatedAt: Timestamp;
   dispositionNotes?: string;
   scheduledAppointmentTime?: Timestamp; // New field for rescheduled appointments
+  setterId?: string; // UID of the user (setter) who created the lead
+  setterName?: string; // Display name of the setter
+  // Storing as a simple object in the type for ease of use, will be GeoPoint in Firestore
+  setterLocation?: { latitude: number; longitude: number; } | null; 
 }
 
 // Updated Closer type to reflect the fields in the 'closers' collection
@@ -47,4 +51,3 @@ export interface Closer {
   avatarUrl?: string;
   phone?: string;
 }
-
