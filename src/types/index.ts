@@ -1,3 +1,4 @@
+
 import type { Timestamp } from 'firebase/firestore';
 
 export type UserRole = "setter" | "closer" | "manager";
@@ -8,7 +9,7 @@ export interface AppUser {
   displayName?: string | null;
   role: UserRole;
   teamId: string;
-  availability?: boolean; // For closers
+  status?: "On Duty" | "Off Duty" | string; // For closers, using string for flexibility
 }
 
 export type LeadStatus =
@@ -36,6 +37,6 @@ export interface Lead {
 export interface Closer {
   uid: string;
   name: string;
-  status: "Available" | "Off Duty"; // Derived from AppUser.availability
+  status: "Available" | "Off Duty"; // This remains for UI display purposes
   teamId: string;
 }

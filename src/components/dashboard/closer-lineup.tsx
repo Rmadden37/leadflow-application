@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -22,15 +23,12 @@ export default function CloserLineup() {
     }
     setLoading(true);
     
-    // This query gets all closers in the team.
-    // The actual "lineup" order might be managed by a separate field or logic.
-    // For now, we'll just list available closers.
     const q = query(
       collection(db, "users"),
       where("teamId", "==", user.teamId),
       where("role", "==", "closer"),
-      where("availability", "==", true),
-      orderBy("displayName", "asc") // Example ordering
+      where("status", "==", "On Duty"), // Query for status "On Duty"
+      orderBy("displayName", "asc")
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -39,7 +37,8 @@ export default function CloserLineup() {
         return {
           uid: doc.id,
           name: data.displayName || data.email || "Unnamed Closer",
-          status: data.availability ? "Available" : "Off Duty",
+          // Derive "Available" / "Off Duty" from AppUser.status for CloserCard
+          status: data.status === "On Duty" ? "Available" : "Off Duty", 
           teamId: data.teamId,
         } as Closer;
       });
@@ -47,6 +46,10 @@ export default function CloserLineup() {
       setLoading(false);
     }, (error) => {
       console.error("Error fetching closer lineup:", error);
+      // This specific error might be due to a missing index for the new query.
+      // Firestore will provide a link in the console to create it.
+      // Example error message: "The query requires an index. You can create it here: <link>"
+      // Index needed: users collection, teamId (ASC), role (ASC), status (ASC), displayName (ASC)
       setLoading(false);
     });
 
@@ -65,7 +68,7 @@ export default function CloserLineup() {
       <CardContent className="flex-grow overflow-hidden">
         {closers.length === 0 && !loading ? (
           <div className="flex h-full items-center justify-center">
-            <p className="text-muted-foreground">No closers currently available.</p>
+            <p className="text-muted-foreground">No closers currently on duty.</p>
           </div>
         ) : (
            <ScrollArea className="h-[300px] md:h-[400px] pr-4">

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAuth } from "@/hooks/use-auth";
@@ -11,14 +12,15 @@ import { useState, useEffect } from "react";
 export default function AvailabilityToggle() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [isAvailable, setIsAvailable] = useState(user?.availability ?? false);
+  // Initialize based on user.status. Assuming "On Duty" means available.
+  const [isUIDuty, setIsUIDuty] = useState(user?.status === "On Duty");
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (user?.availability !== undefined) {
-      setIsAvailable(user.availability);
+    if (user?.status !== undefined) {
+      setIsUIDuty(user.status === "On Duty");
     }
-  }, [user?.availability]);
+  }, [user?.status]);
 
   if (!user || user.role !== "closer") {
     return null;
@@ -27,20 +29,22 @@ export default function AvailabilityToggle() {
   const handleToggleAvailability = async (checked: boolean) => {
     if (!user?.uid) return;
     setIsLoading(true);
-    setIsAvailable(checked); // Optimistic update
+    setIsUIDuty(checked); // Optimistic update for UI
+
+    const newFirestoreStatus = checked ? "On Duty" : "Off Duty";
 
     try {
       const userDocRef = doc(db, "users", user.uid);
       await updateDoc(userDocRef, {
-        availability: checked,
+        status: newFirestoreStatus, // Update the 'status' field in Firestore
       });
       toast({
         title: "Status Updated",
-        description: `You are now ${checked ? "Available" : "Off Duty"}.`,
+        description: `You are now ${newFirestoreStatus}.`,
       });
     } catch (error) {
-      console.error("Error updating availability:", error);
-      setIsAvailable(!checked); // Revert optimistic update
+      console.error("Error updating availability status:", error);
+      setIsUIDuty(!checked); // Revert optimistic update
       toast({
         title: "Update Failed",
         description: "Could not update your availability status.",
@@ -55,13 +59,13 @@ export default function AvailabilityToggle() {
     <div className="flex items-center space-x-2">
       <Switch
         id="availability-toggle"
-        checked={isAvailable}
+        checked={isUIDuty}
         onCheckedChange={handleToggleAvailability}
         disabled={isLoading}
-        aria-label={isAvailable ? "Set to Off Duty" : "Set to Available"}
+        aria-label={isUIDuty ? "Set to Off Duty" : "Set to On Duty"}
       />
-      <Label htmlFor="availability-toggle" className={`text-sm font-medium ${isAvailable ? 'text-green-600' : 'text-red-600'}`}>
-        {isAvailable ? "Available" : "Off Duty"}
+      <Label htmlFor="availability-toggle" className={`text-sm font-medium ${isUIDuty ? 'text-green-600' : 'text-red-600'}`}>
+        {isUIDuty ? "On Duty" : "Off Duty"}
       </Label>
     </div>
   );

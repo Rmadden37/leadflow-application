@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -16,7 +17,7 @@ export default function OffDutyClosers() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user || !user.teamId || user.role !== 'manager') { // Primarily for managers
+    if (!user || !user.teamId || user.role !== 'manager') {
       setLoading(false);
       setClosers([]);
       return;
@@ -27,7 +28,7 @@ export default function OffDutyClosers() {
       collection(db, "users"),
       where("teamId", "==", user.teamId),
       where("role", "==", "closer"),
-      where("availability", "==", false),
+      where("status", "==", "Off Duty"), // Query for status "Off Duty"
       orderBy("displayName", "asc")
     );
 
@@ -37,7 +38,8 @@ export default function OffDutyClosers() {
         return {
           uid: doc.id,
           name: data.displayName || data.email || "Unnamed Closer",
-          status: "Off Duty",
+          // If queried for "Off Duty", their display status is "Off Duty"
+          status: "Off Duty", 
           teamId: data.teamId,
         } as Closer;
       });
@@ -45,6 +47,10 @@ export default function OffDutyClosers() {
       setLoading(false);
     }, (error) => {
       console.error("Error fetching off-duty closers:", error);
+      // This specific error might be due to a missing index for the new query.
+      // Firestore will provide a link in the console to create it.
+      // Example error message: "The query requires an index. You can create it here: <link>"
+      // Index needed: users collection, teamId (ASC), role (ASC), status (ASC), displayName (ASC)
       setLoading(false);
     });
 
@@ -52,7 +58,7 @@ export default function OffDutyClosers() {
   }, [user]);
 
   if (user?.role !== 'manager') {
-    return null; // This section is typically for managers
+    return null;
   }
 
   return (
@@ -67,7 +73,7 @@ export default function OffDutyClosers() {
       <CardContent className="flex-grow overflow-hidden">
         {closers.length === 0 && !loading ? (
           <div className="flex h-full items-center justify-center">
-            <p className="text-muted-foreground">All closers are available or none are off duty.</p>
+            <p className="text-muted-foreground">No closers are currently off duty.</p>
           </div>
         ) : (
           <ScrollArea className="h-[300px] md:h-[400px] pr-4">
