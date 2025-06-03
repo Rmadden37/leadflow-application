@@ -40,6 +40,7 @@ const getStatusIcon = (status: Lead["status"]) => {
     case "canceled":
       return <Ban className="h-5 w-5 text-yellow-500" />;
     case "rescheduled":
+    case "scheduled": // Added new status
       return <CalendarClock className="h-5 w-5 text-purple-500" />;
     case "credit_fail":
       return <CreditCard className="h-5 w-5 text-orange-500" />;
@@ -60,6 +61,7 @@ const getStatusVariant = (status: Lead["status"]): "default" | "secondary" | "de
       return "destructive";
     case "waiting_assignment":
     case "rescheduled":
+    case "scheduled": // Added new status
       return "outline";
     default: return "outline";
   }
@@ -73,7 +75,8 @@ export default function LeadCard({ lead, context = "in-process" }: LeadCardProps
   const canUpdateDisposition = user?.role === "closer" && lead.assignedCloserId === user.uid && context === "in-process";
 
   const timeCreatedAgo = lead.createdAt ? formatDistanceToNow(lead.createdAt.toDate(), { addSuffix: true }) : 'N/A';
-  const scheduledTimeDisplay = lead.status === 'rescheduled' && lead.scheduledAppointmentTime
+  
+  const scheduledTimeDisplay = (lead.status === 'rescheduled' || lead.status === 'scheduled') && lead.scheduledAppointmentTime
     ? formatDate(lead.scheduledAppointmentTime.toDate(), "MMM d, p")
     : null;
 
@@ -158,3 +161,4 @@ export default function LeadCard({ lead, context = "in-process" }: LeadCardProps
     </>
   );
 }
+

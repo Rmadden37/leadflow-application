@@ -36,6 +36,7 @@ const dispositionOptions: LeadStatus[] = [
   "no_sale",
   "canceled",
   "rescheduled",
+  "scheduled", // Added new status
   "credit_fail",
 ];
 
@@ -73,11 +74,11 @@ export default function LeadDispositionModal({ lead, isOpen, onClose }: LeadDisp
     }
 
     let scheduledTimestamp: Timestamp | undefined = undefined;
-    if (selectedStatus === "rescheduled") {
+    if (selectedStatus === "rescheduled" || selectedStatus === "scheduled") {
       if (!appointmentDate || !appointmentHour || !appointmentMinute) {
         toast({
           title: "Missing Appointment Time",
-          description: "Please select a date and time for the rescheduled appointment.",
+          description: "Please select a date and time for the appointment.",
           variant: "destructive",
         });
         return;
@@ -105,10 +106,10 @@ export default function LeadDispositionModal({ lead, isOpen, onClose }: LeadDisp
         updatedAt: serverTimestamp(),
       };
 
-      if (selectedStatus === "rescheduled" && scheduledTimestamp) {
+      if ((selectedStatus === "rescheduled" || selectedStatus === "scheduled") && scheduledTimestamp) {
         updateData.scheduledAppointmentTime = scheduledTimestamp;
       } else {
-        // Clear scheduled time if not rescheduled or if it was previously rescheduled and now something else
+        // Clear scheduled time if not (re)scheduled or if it was previously and now something else
         updateData.scheduledAppointmentTime = null; 
       }
 
@@ -152,7 +153,7 @@ export default function LeadDispositionModal({ lead, isOpen, onClose }: LeadDisp
             ))}
           </RadioGroup>
 
-          {selectedStatus === "rescheduled" && (
+          {(selectedStatus === "rescheduled" || selectedStatus === "scheduled") && (
             <div className="space-y-3 rounded-md border border-border p-3">
               <Label className="text-sm font-medium">Set Appointment Time</Label>
               <Popover>
@@ -222,3 +223,4 @@ export default function LeadDispositionModal({ lead, isOpen, onClose }: LeadDisp
     </Dialog>
   );
 }
+

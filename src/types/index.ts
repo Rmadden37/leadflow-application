@@ -21,6 +21,7 @@ export type LeadStatus =
   | "no_sale"
   | "canceled"
   | "rescheduled"
+  | "scheduled" // Added new status
   | "credit_fail";
 
 export interface Lead {
@@ -34,10 +35,10 @@ export interface Lead {
   createdAt: Timestamp;
   updatedAt: Timestamp;
   dispositionNotes?: string;
-  scheduledAppointmentTime?: Timestamp; // New field for rescheduled appointments
-  setterId?: string; // UID of the user (setter or manager) who created the lead
-  setterName?: string; // Display name of the setter
-  setterLocation?: GeoPoint | null; // GeoPoint from Firestore for setter's location
+  scheduledAppointmentTime?: Timestamp | null;
+  setterId?: string;
+  setterName?: string;
+  setterLocation?: GeoPoint | null;
 }
 
 // Updated Closer type to reflect the fields in the 'closers' collection
@@ -50,3 +51,4 @@ export interface Closer {
   avatarUrl?: string;
   phone?: string;
 }
+

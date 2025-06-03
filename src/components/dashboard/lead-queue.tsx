@@ -75,10 +75,10 @@ export default function LeadQueue() {
     const qScheduled = query(
       collection(db, "leads"),
       where("teamId", "==", user.teamId),
-      where("status", "==", "rescheduled"),
-      orderBy("scheduledAppointmentTime", "asc") // Order by appointment time to process soonest first
+      where("status", "in", ["rescheduled", "scheduled"]), // Updated to include "scheduled" status
+      orderBy("scheduledAppointmentTime", "asc") 
     );
-    console.log("[LeadQueue - ScheduledList] Querying for rescheduled leads. Query:", qScheduled);
+    console.log("[LeadQueue - ScheduledList] Querying for rescheduled and scheduled leads. Query:", qScheduled);
 
 
     const unsubscribeScheduled = onSnapshot(qScheduled, async (querySnapshot) => {
@@ -92,31 +92,32 @@ export default function LeadQueue() {
       const now = new Date();
       const leadsToMoveBatch = writeBatch(db);
       let movedCount = 0;
-      console.log(`[LeadQueue - ScheduledList] Processing ${leadsData.length} scheduled leads at ${now.toISOString()}`);
+      console.log(`[LeadQueue - ScheduledList] Processing ${leadsData.length} scheduled/rescheduled leads at ${now.toISOString()}`);
 
       leadsData.forEach(lead => {
-        if (lead.scheduledAppointmentTime && !processedLeadIds.has(lead.id)) {
+        // Only process if it has an appointment time and hasn't been processed by this client session yet
+        if (lead.scheduledAppointmentTime && (lead.status === "rescheduled" || lead.status === "scheduled") && !processedLeadIds.has(lead.id)) {
           const appointmentTime = lead.scheduledAppointmentTime.toDate();
           const timeUntilAppointment = appointmentTime.getTime() - now.getTime();
           
-          console.log(`[LeadQueue - ScheduledList] Lead ID: ${lead.id}, Appt Time: ${appointmentTime.toISOString()}, Time Until: ${timeUntilAppointment}ms`);
+          console.log(`[LeadQueue - ScheduledList] Lead ID: ${lead.id}, Status: ${lead.status}, Appt Time: ${appointmentTime.toISOString()}, Time Until: ${timeUntilAppointment}ms`);
 
           // If current time is 45 mins before appointment or appointment has passed
           if (timeUntilAppointment <= FORTY_FIVE_MINUTES_MS) {
             console.log(`[LeadQueue - ScheduledList] Moving lead ID: ${lead.id} to waiting_assignment. Original closer: ${lead.assignedCloserName}`);
             const leadRef = doc(db, "leads", lead.id);
             leadsToMoveBatch.update(leadRef, {
-              status: "waiting_assignment", // Move to waiting list
+              status: "waiting_assignment", 
               updatedAt: serverTimestamp(),
-              // assignedCloserId and assignedCloserName remain as they were
+              // Keep assignedCloserId and assignedCloserName to indicate who it was previously with
             });
             movedCount++;
-            setProcessedLeadIds(prev => new Set(prev).add(lead.id));
+            setProcessedLeadIds(prev => new Set(prev).add(lead.id)); // Mark as processed
           }
         } else if (processedLeadIds.has(lead.id)) {
-            console.log(`[LeadQueue - ScheduledList] Lead ID: ${lead.id} was already processed by this client session.`);
-        } else if (!lead.scheduledAppointmentTime) {
-            console.warn(`[LeadQueue - ScheduledList] Lead ID: ${lead.id} has 'rescheduled' status but no scheduledAppointmentTime.`);
+            console.log(`[LeadQueue - ScheduledList] Lead ID: ${lead.id} was already processed for moving by this client session.`);
+        } else if (!lead.scheduledAppointmentTime && (lead.status === "rescheduled" || lead.status === "scheduled")) {
+            console.warn(`[LeadQueue - ScheduledList] Lead ID: ${lead.id} has '${lead.status}' status but no scheduledAppointmentTime.`);
         }
       });
 
@@ -135,6 +136,15 @@ export default function LeadQueue() {
             title: "Update Failed",
             description: "Could not move scheduled leads automatically.",
             variant: "destructive",
+          });
+           // If batch commit fails, remove IDs from processedLeadIds so they can be retried
+          const failedLeadIds = leadsData
+            .filter(lead => lead.scheduledAppointmentTime && (lead.status === "rescheduled" || lead.status === "scheduled") && (lead.scheduledAppointmentTime.toDate().getTime() - now.getTime() <= FORTY_FIVE_MINUTES_MS))
+            .map(lead => lead.id);
+          setProcessedLeadIds(prev => {
+            const newSet = new Set(prev);
+            failedLeadIds.forEach(id => newSet.delete(id));
+            return newSet;
           });
         }
       }
@@ -212,3 +222,4 @@ export default function LeadQueue() {
     </Card>
   );
 }
+
