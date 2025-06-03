@@ -56,7 +56,7 @@ export default function CloserCard({ closer, allowInteractiveToggle = true }: Cl
   const currentStatusIsOnDuty = closer.status === "On Duty";
 
   return (
-    <Card className="shadow-sm hover:shadow-md transition-shadow duration-200">
+    <Card className="shadow-sm hover:shadow-md transition-shadow duration-200 dark:bg-black/[.15] dark:border-white/[.08]">
       <CardContent className="p-3">
         <div className="flex items-center space-x-3">
           <Avatar className="h-12 w-12 border border-border">

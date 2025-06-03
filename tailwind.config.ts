@@ -79,7 +79,7 @@ export default {
         sm: 'calc(var(--radius) - 4px)',
       },
       boxShadow: {
-        'card-glow-dark': '0px 0px 35px -5px hsla(163, 50%, 35%, 0.35)',
+        'card-glow-dark': '0px 0px 20px -7px hsla(163, 50%, 35%, 0.22)',
       },
       keyframes: {
         'accordion-down': {

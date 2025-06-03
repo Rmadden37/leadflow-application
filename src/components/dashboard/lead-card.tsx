@@ -85,7 +85,7 @@ export default function LeadCard({ lead, context = "in-process" }: LeadCardProps
 
   return (
     <>
-      <Card className="shadow-md hover:shadow-lg transition-shadow duration-200 flex flex-col">
+      <Card className="shadow-md hover:shadow-lg transition-shadow duration-200 flex flex-col dark:bg-black/[.15] dark:border-white/[.08]">
         <CardHeader className="pb-3 pt-4 px-4">
           <div className="flex justify-between items-start">
             <div>
