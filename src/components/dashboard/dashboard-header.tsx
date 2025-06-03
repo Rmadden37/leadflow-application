@@ -5,9 +5,9 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, UserCircle, ClipboardList, PlusCircle, Loader2, History } from "lucide-react";
+import { LogOut, UserCircle, ClipboardList, PlusCircle, History } from "lucide-react";
 import AvailabilityToggle from "./availability-toggle";
-import CreateLeadForm from "./create-lead-form"; 
+import CreateLeadForm from "./create-lead-form";
 import { ThemeToggleButton } from "@/components/theme-toggle-button";
 import { useState } from "react";
 
@@ -41,7 +41,7 @@ export default function DashboardHeader() {
               </Button>
             )}
             {user?.role === "closer" && <AvailabilityToggle />}
-            <div className="flex items-center space-x-2">
+            <Link href="/dashboard/profile" className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity">
               <Avatar className="h-10 w-10 border border-border">
                 <AvatarImage src={user?.displayName ? `https://ui-avatars.com/api/?name=${user.displayName.replace(/\s+/g, '+')}&background=random` : undefined} />
                 <AvatarFallback>
@@ -52,7 +52,7 @@ export default function DashboardHeader() {
                 <span className="font-semibold">{user?.displayName || user?.email}</span>
                 <span className="text-muted-foreground capitalize">{user?.role}</span>
               </div>
-            </div>
+            </Link>
             <ThemeToggleButton />
             <Button variant="ghost" size="icon" onClick={logout} aria-label="Logout">
               <LogOut className="h-6 w-6" />
