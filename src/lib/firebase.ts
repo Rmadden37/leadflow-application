@@ -1,7 +1,12 @@
+
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
+// TODO: Replace the "YOUR_..." placeholder strings below with your actual
+// Firebase project configuration values.
+// You can find these in your Firebase project settings in the Firebase Console.
+// For production, it's recommended to use environment variables.
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "YOUR_API_KEY",
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "YOUR_AUTH_DOMAIN",
