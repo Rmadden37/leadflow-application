@@ -181,7 +181,7 @@ export default function LeadDispositionModal({ lead, isOpen, onClose }: LeadDisp
               </Popover>
               <div className="grid grid-cols-2 gap-2">
                 <Select onValueChange={setAppointmentHour} value={appointmentHour}>
-                  <SelectTrigger placeholder="Hour">
+                  <SelectTrigger>
                     <SelectValue placeholder="Hour" />
                   </SelectTrigger>
                   <SelectContent>
@@ -191,7 +191,7 @@ export default function LeadDispositionModal({ lead, isOpen, onClose }: LeadDisp
                   </SelectContent>
                 </Select>
                 <Select onValueChange={setAppointmentMinute} value={appointmentMinute}>
-                  <SelectTrigger placeholder="Minute">
+                  <SelectTrigger>
                     <SelectValue placeholder="Minute" />
                   </SelectTrigger>
                   <SelectContent>
@@ -223,4 +223,3 @@ export default function LeadDispositionModal({ lead, isOpen, onClose }: LeadDisp
     </Dialog>
   );
 }
-
