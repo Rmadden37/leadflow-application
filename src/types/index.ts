@@ -9,6 +9,7 @@ export interface AppUser {
   displayName?: string | null; // This can be the general user display name
   role: UserRole;
   teamId: string;
+  avatarUrl?: string; // Added avatarUrl
   // The status field is now primarily managed in the 'closers' collection for closers
   // This status in AppUser might be a general status or specific to non-closer roles if needed.
   status?: "On Duty" | "Off Duty" | string;
@@ -57,4 +58,3 @@ export interface Closer {
   phone?: string;
   lineupOrder?: number; // Field for managing closer lineup order
 }
-
