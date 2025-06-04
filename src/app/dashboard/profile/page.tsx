@@ -190,7 +190,9 @@ export default function ProfilePage() {
       height
     );
     setCrop(initialCrop);
-    setCompletedCrop(initialCrop); 
+    // The line below was causing the type error and is removed.
+    // setCompletedCrop(initialCrop); 
+    // `onComplete` of ReactCrop will handle setting the completedCrop with a PixelCrop.
   }
   
   useEffect(() => {
@@ -240,12 +242,12 @@ export default function ProfilePage() {
             }
             // Force re-fetch of user data to update avatar in UI
             // This might need a more robust solution in useAuth or a global state update
-            const updatedUserSnap = await getDoc(userDocRef);
-            if (updatedUserSnap.exists()) {
+            // const updatedUserSnap = await getDoc(userDocRef);
+            // if (updatedUserSnap.exists()) {
                  // This is a bit of a hack, ideally useAuth would re-fetch or have a refresh function
                  // Forcing a state update that causes useAuth to re-evaluate might work
                  // Or, update the local user object directly if useAuth provides a setter.
-            }
+            // }
 
 
             toast({ title: "Profile Photo Updated", description: "Your new photo is now active." });
