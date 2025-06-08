@@ -31,6 +31,14 @@ export const storage = getStorage(app);
 
 // Initialize Firebase Cloud Messaging and get a reference to the service
 // Only initialize messaging if supported (client-side only)
-export const messaging = isSupported() ? getMessaging(app) : null;
+let messaging: any = null;
+if (typeof window !== 'undefined') {
+  isSupported().then((supported) => {
+    if (supported) {
+      messaging = getMessaging(app);
+    }
+  });
+}
+export { messaging };
 
 export default app;
