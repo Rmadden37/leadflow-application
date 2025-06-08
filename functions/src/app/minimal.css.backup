@@ -1,0 +1,226 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 213 33% 95%;
+    --foreground: 215 25% 17%;
+
+    --background-gradient-from: 213 33% 97%;
+    --background-gradient-to: 213 33% 93%;
+
+    --muted: 216 12% 84%;
+    --muted-foreground: 216 12% 44%;
+
+    --popover: 213 33% 95%;
+    --popover-foreground: 215 25% 17%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 17%;
+
+    --border: 216 12% 84%;
+    --input: 216 12% 84%;
+
+    --primary: 211 68% 62%;
+    --primary-foreground: 0 0% 100%;
+    --primary-gradient-from: 211 68% 62%;
+    --primary-gradient-to: 211 58% 52%;
+
+    --secondary: 163 50% 45%;
+    --secondary-foreground: 0 0% 100%;
+
+    --accent: 186 42% 35%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 60% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --ring: 211 68% 62%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* TRON Dark Theme - Pure Black Foundation */
+    --background: 0 0% 3%;
+    --foreground: 180 100% 85%;
+
+    /* TRON Grid Pattern Background */
+    --background-gradient-from: 0 0% 2%;
+    --background-gradient-to: 200 50% 5%;
+
+    --muted: 180 30% 8%;
+    --muted-foreground: 180 50% 60%;
+
+    --popover: 0 0% 5%;
+    --popover-foreground: 180 100% 85%;
+
+    --card: 0 0% 6%;
+    --card-foreground: 180 80% 80%;
+
+    /* TRON Cyan Borders & Outlines */
+    --border: 180 100% 25%;
+    --input: 0 0% 8%;
+
+    /* TRON Cyan Primary Colors */
+    --primary: 180 100% 50%;
+    --primary-foreground: 0 0% 0%;
+    --primary-gradient-from: 180 100% 60%;
+    --primary-gradient-to: 180 100% 40%;
+
+    /* TRON Orange Secondary Colors */
+    --secondary: 30 100% 50%;
+    --secondary-foreground: 0 0% 0%;
+
+    /* TRON Blue Accent */
+    --accent: 210 100% 60%;
+    --accent-foreground: 0 0% 0%;
+
+    /* TRON Red Destructive */
+    --destructive: 0 100% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* TRON Cyan Ring */
+    --ring: 180 100% 50%;
+
+    /* TRON Custom Colors */
+    --tron-cyan: 180 100% 50%;
+    --tron-orange: 30 100% 50%;
+    --tron-blue: 210 100% 60%;
+    --tron-grid: 180 100% 15%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    background-image: linear-gradient(to bottom right, hsl(var(--background-gradient-from)), hsl(var(--background-gradient-to)));
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+
+  /* TRON Grid Background for Dark Mode */
+  .dark body {
+    background-image: 
+      linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+      linear-gradient(to bottom right, hsl(var(--background-gradient-from)), hsl(var(--background-gradient-to)));
+    background-size: 50px 50px, 50px 50px, 100% 100%;
+    background-attachment: fixed;
+  }
+
+  /* TRON Glow Effects */
+  .dark .tron-glow {
+    box-shadow: 
+      0 0 5px hsl(var(--tron-cyan)),
+      0 0 10px hsl(var(--tron-cyan)),
+      0 0 20px hsl(var(--tron-cyan)),
+      inset 0 0 5px rgba(0, 255, 255, 0.1);
+  }
+
+  .dark .tron-border {
+    border: 1px solid hsl(var(--tron-cyan));
+    box-shadow: 
+      0 0 5px rgba(0, 255, 255, 0.5),
+      inset 0 0 5px rgba(0, 255, 255, 0.1);
+  }
+
+  .dark .tron-text-glow {
+    text-shadow: 
+      0 0 5px hsl(var(--tron-cyan)),
+      0 0 10px hsl(var(--tron-cyan)),
+      0 0 15px hsl(var(--tron-cyan));
+  }
+}
+
+@layer utilities {
+  .bg-grid-pattern {
+    background-image: radial-gradient(circle at 1px 1px, rgba(51, 65, 85, 0.4) 1px, transparent 0);
+    background-size: 20px 20px;
+  }
+  
+  .bg-grid-slate-700 {
+    background-image: radial-gradient(circle at 1px 1px, rgba(51, 65, 85, 0.4) 1px, transparent 0);
+    background-size: 20px 20px;
+  }
+
+  /* TRON Utilities */
+  .tron-glow {
+    @apply shadow-[0_0_5px_theme(colors.cyan.400),0_0_10px_theme(colors.cyan.400),0_0_20px_theme(colors.cyan.400)];
+  }
+
+  .tron-border {
+    @apply border border-cyan-400 shadow-[0_0_5px_rgba(0,255,255,0.5),inset_0_0_5px_rgba(0,255,255,0.1)];
+  }
+
+  .tron-text-glow {
+    text-shadow: 
+      0 0 5px theme(colors.cyan.400),
+      0 0 10px theme(colors.cyan.400),
+      0 0 15px theme(colors.cyan.400);
+  }
+
+  /* TRON Button Enhancements */
+  .dark button[data-state="open"],
+  .dark button:hover,
+  .dark [role="menuitem"]:hover {
+    transition: all 0.3s ease;
+  }
+
+  .dark button[data-state="open"] {
+    box-shadow: 
+      0 0 8px rgba(0, 255, 255, 0.6),
+      inset 0 0 8px rgba(0, 255, 255, 0.1);
+  }
+
+  /* TRON Card Enhancements */
+  .dark .card,
+  .dark [role="dialog"],
+  .dark [data-radix-popper-content-wrapper] {
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(0, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+  }
+
+  /* TRON Input Field Styling */
+  .dark input,
+  .dark textarea,
+  .dark select {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(0, 255, 255, 0.3);
+    transition: all 0.3s ease;
+  }
+
+  .dark input:focus,
+  .dark textarea:focus,
+  .dark select:focus {
+    border-color: hsl(var(--tron-cyan));
+    box-shadow: 
+      0 0 5px rgba(0, 255, 255, 0.5),
+      inset 0 0 5px rgba(0, 255, 255, 0.1);
+  }
+
+  /* TRON Scrollbar */
+  .dark ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .dark ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: rgba(0, 255, 255, 0.3);
+    border-radius: 4px;
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 255, 255, 0.5);
+  }
+}
